@@ -245,7 +245,7 @@ class TaskListener(TaskConfig):
                 await sendMedia(msg, chat_id, reply_to)
             else:
                 await sendCustom(msg, chat_id)
-        msg = f'<a href="https://t.me/+feFp47sjcgMwMDc1"><b><i>Bot Of Bhartiyee Leech</b></i></a>\n'
+        msg = f'<a href="https://t.me/aspirantDiscuss"><b><i>Bot Of Honey Leech</b></i></a>\n'
         msg += f'<code>{escape(self.name)}</code>\n'
         msg += f'<b>Size: </b>{size}\n'
         if self.isLeech:

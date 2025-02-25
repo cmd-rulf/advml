@@ -34,10 +34,10 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'UPSTREAM_BRANCH': 'master',
                   'FSUB_BUTTON_NAME': 'Join Channel',
                   'CHANNEL_USERNAME': '',
-                  'AUTHOR_NAME': 'Rizz',
-                  'AUTHOR_URL': 'https://t.me/Noctophile',
+                  'AUTHOR_NAME': 'Searchx',
+                  'AUTHOR_URL': 'https://t.me/h_oneysingh',
                   'DRIVE_SEARCH_TITLE': 'Drive Search',
-                  'GD_INFO': 'By @Noctophile',
+                  'GD_INFO': 'By @h_oneysingh',
                   'RCLONE_TFSIMULATION': 4,
                   'SESSION_TIMEOUT': 0,
                   'PROG_FINISH': '⬢',
@@ -49,7 +49,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'DAILY_LIMIT_SIZE': 50,
                   'TSEARCH_TITLE': 'Torrent Search',
                   'DISABLE_VIDTOOLS': 'Nope',
-                  'COMPRESS_BANNER': 'Re-Encoded by @Bhartiyeleech',
+                  'COMPRESS_BANNER': 'Re-Encoded by @aspirantDiscuss',
                   'LIB264_PRESET': 'superfast',
                   'LIB265_PRESET': 'faster',
                   'HARDSUB_FONT_NAME': 'Simple Day Mistu',
@@ -74,7 +74,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'IMAGE_HTML': 'https://envs.sh/Cba.jpg',
                   'IMAGE_IMDB': 'https://envs.sh/Cbf.jpg',
                   'IMAGE_INFO': 'https://envs.sh/Cbg.jpg',
-                  'IMAGE_ITALIC': 'https://envs.sh/BcS.jpg',
+                  'IMAGE_ITALIC': 'https://envs.sh/JlG.jpg',
                   'IMAGE_JD': 'https://envs.sh/CPu.jpg',
                   'IMAGE_LOGS': 'https://envs.sh/CP2.jpg',
                   'IMAGE_MDL': 'https://envs.sh/CPd.jpg',
@@ -88,7 +88,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'IMAGE_QBIT': 'https://envs.sh/Cba.jpg',
                   'IMAGE_RCLONE': 'https://envs.sh/Cbf.jpg',
                   'IMAGE_REMNAME': 'https://envs.sh/Cbg.jpg',
-                  'IMAGE_RSS': 'https://envs.sh/BcS.jpg',
+                  'IMAGE_RSS': 'https://envs.sh/JlG.jpg',
                   'IMAGE_SEARCH': 'https://envs.sh/Cb-.jpg',
                   'IMAGE_STATS': 'https://envs.sh/Cbx.jpg',
                   'IMAGE_STATUS': 'https://envs.sh/Cby.jpg',
@@ -351,7 +351,7 @@ async def load_config():
     IMAGE_HTML = environ.get('IMAGE_HTML', 'https://envs.sh/Cba.jpg')
     IMAGE_IMDB = environ.get('IMAGE_IMDB', 'https://envs.sh/Cbf.jpg')
     IMAGE_INFO = environ.get('IMAGE_INFO', 'https://envs.sh/Cbg.jpg')
-    IMAGE_ITALIC = environ.get('IMAGE_ITALIC', 'https://envs.sh/BcS.jpg')
+    IMAGE_ITALIC = environ.get('IMAGE_ITALIC', 'https://envs.sh/JlG.jpg')
     IMAGE_JD = environ.get('IMAGE_JD', 'https://envs.sh/CPu.jpg')
     IMAGE_LOGS = environ.get('IMAGE_LOGS', 'https://envs.sh/CP2.jpg')
     IMAGE_MDL = environ.get('IMAGE_MDL', 'https://envs.sh/CPd.jpg')
@@ -365,7 +365,7 @@ async def load_config():
     IMAGE_QBIT = environ.get('IMAGE_QBIT', 'https://envs.sh/Cba.jpg')
     IMAGE_RCLONE = environ.get('IMAGE_RCLONE', 'https://envs.sh/Cbf.jpg')
     IMAGE_REMNAME = environ.get('IMAGE_REMNAME', 'https://envs.sh/Cbg.jpg')
-    IMAGE_RSS = environ.get('IMAGE_RSS', 'https://envs.sh/BcS.jpg')
+    IMAGE_RSS = environ.get('IMAGE_RSS', 'https://envs.sh/JlG.jpg')
     IMAGE_SEARCH = environ.get('IMAGE_SEARCH', 'https://envs.sh/Cb-.jpg')
     IMAGE_STATS = environ.get('IMAGE_STATS', 'https://envs.sh/Cbx.jpg')
     IMAGE_STATUS = environ.get('IMAGE_STATUS', 'https://envs.sh/Cby.jpg')
@@ -380,7 +380,7 @@ async def load_config():
     IMAGE_WEL = environ.get('IMAGE_WEL', 'https://envs.sh/CbV.jpg')
     IMAGE_WIBU = environ.get('IMAGE_WIBU', 'https://envs.sh/CbN.jpg')
     IMAGE_YT = environ.get('IMAGE_YT', 'https://envs.sh/Cb6.jpg')
-    IMAGE_ZIP = environ.get('IMAGE_ZIP', 'https://envs.sh/BcS.jpg')
+    IMAGE_ZIP = environ.get('IMAGE_ZIP', 'https://envs.sh/JlG.jpg')
     # ======================================================================
 
     # =========================== ACCOUNTS =================================
@@ -407,10 +407,10 @@ async def load_config():
     # ======================================================================
 
     # ============================== UI ====================================
-    AUTHOR_NAME = environ.get('AUTHOR_NAME', 'Anonim')
-    AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/TrollUser')
+    AUTHOR_NAME = environ.get('AUTHOR_NAME', 'Searchx')
+    AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/h_oneysingh')
     DRIVE_SEARCH_TITLE = environ.get('DRIVE_SEARCH_TITLE', 'Drive Search')
-    GD_INFO = environ.get('GD_INFO', 'Uploaded by Telegram Mirror Bot')
+    GD_INFO = environ.get('GD_INFO', 'Uploaded by Telegram Honey Bot')
     PROG_FINISH = environ.get('PROG_FINISH', '⬢')
     PROG_UNFINISH = environ.get('PROG_UNFINISH', '⬡')
     SOURCE_LINK_TITLE = environ.get('SOURCE_LINK_TITLE', 'Source Link')

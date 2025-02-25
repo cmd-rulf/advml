@@ -125,7 +125,7 @@ def action(message: Message):
 
 
 def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='All', page_step: int=1):
-    msg = f'<a href="https://t.me/CloudStoreRizz"><b><i>Bot Of Bhartiyeleech</b></i></a>\n'
+    msg = f'<a href="https://t.me/aspirantDiscuss"><b><i>Bot Of Honey leech</b></i></a>\n'
     dl_speed = up_speed = 0
 
     if status == 'All':
