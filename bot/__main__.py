@@ -243,7 +243,7 @@ async def new_member(_, message: Message):
         except:
             image = config_dict['IMAGE_WEL']
         text = f'''
-Hello there <b>{user.mention}</b>, welcome to <b>{(await bot.get_chat(message.chat.id)).title}</b> Group. Enjoy in mirror/leech party 😘
+Hello there <b>{user.mention}</b>, welcome to <b>{(await bot.get_chat(message.chat.id)).title}</b> Group. Enjoy in HONEY party 😘
 <b>ID:</b> <code>{user.id}</code>
 <b>First Name:</b> {user.first_name}
 <b>Last Name:</b> {user.last_name or '~'}
@@ -287,7 +287,7 @@ async def restart_notification():
 
     notifier_dict = False
     async with bot_lock:
-        premium_message = '\nPremium leech enable 😘!' if bot_dict['IS_PREMIUM'] else ''
+        premium_message = '\nPremium Honey leech enable 😘!' if bot_dict['IS_PREMIUM'] else ''
     if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL and (notifier_dict := await DbManager().get_incomplete_tasks()):
         buttons = ButtonMaker()
         auto_resume = config_dict['INCOMPLETE_AUTO_RESUME']
