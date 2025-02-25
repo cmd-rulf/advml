@@ -20,7 +20,7 @@ Timeout: 60s.</i>
     RCP = '''
 <b>RCLONE PATH SETTING</b>\n
 Send valid rclone path
-Example: <code>mrcc:GDRIVE:Mirror/Movie</code>\n
+Example: <code>mrcc:GDRIVE:HONEY</code>\n
 Timeout: 60s.</i>
 '''
     GDID = '''

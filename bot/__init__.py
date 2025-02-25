@@ -155,7 +155,7 @@ if DATABASE_URL := environ.get('DATABASE_URL', ''):
 else:
     config_dict = {}
 
-if OWNER_ID := environ.get('OWNER_ID', '6101337858'):
+if OWNER_ID := environ.get('OWNER_ID', '1094941160'):
     OWNER_ID = int(OWNER_ID)
 else:
     LOGGER.error('OWNER_ID variable is missing! Exiting now')
@@ -454,10 +454,10 @@ UPDATE_EVERYTHING = environ.get('UPDATE_EVERYTHING', 'False').lower() == 'true'
 
 
 # ============================== UI ====================================
-AUTHOR_NAME = environ.get('AUTHOR_NAME', 'Rizz')
-AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/Noctophile')
+AUTHOR_NAME = environ.get('AUTHOR_NAME', 'Searchx')
+AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/h_oneysingh')
 DRIVE_SEARCH_TITLE = environ.get('DRIVE_SEARCH_TITLE', 'Drive Search')
-GD_INFO = environ.get('GD_INFO', 'By @Bhartiyeleech')
+GD_INFO = environ.get('GD_INFO', 'By @aspirantDiscuss')
 PROG_FINISH = environ.get('PROG_FINISH', '⬢')
 PROG_UNFINISH = environ.get('PROG_UNFINISH', '⬡')
 SOURCE_LINK_TITLE = environ.get('SOURCE_LINK_TITLE', 'Source Link')

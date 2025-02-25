@@ -60,7 +60,7 @@ if (UPSTREAM_REPO := environ.get('UPSTREAM_REPO')) and (UPSTREAM_BRANCH := envir
         srun(['rm', '-rf', '.git'], check=True)
     update = srun([f'git init -q \
                      && git config --global user.email e.luckm4n@gmail.com \
-                     && git config --global user.name R4ndomUsers \
+                     && git config --global user.name Honeyrs \
                      && git add . \
                      && git commit -sm update -q \
                      && git remote add origin {UPSTREAM_REPO} \

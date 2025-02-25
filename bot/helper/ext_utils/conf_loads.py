@@ -311,13 +311,13 @@ async def load_config():
     # Auto Mute
     FORCE_SHORTEN = environ.get('FORCE_SHORTEN', 'False').lower() == 'true'
     AUTO_MUTE = environ.get('AUTO_MUTE', 'False').lower() == 'true'
-    MUTE_CHAT_ID = int(environ.get('MUTE_CHAT_ID', -1001768377379))
+    MUTE_CHAT_ID = int(environ.get('MUTE_CHAT_ID', -1002455211039))
     AUTO_MUTE_DURATION = int(environ.get('AUTO_MUTE_DURATION', 30))
     # Username
     FUSERNAME = environ.get('FUSERNAME', 'False').lower() == 'true'
     # Subscribe
     FSUB = environ.get('FSUB', 'False').lower() == 'true'
-    FSUB_CHANNEL_ID = int(environ.get('FSUB_CHANNEL_ID', -1001768377379))
+    FSUB_CHANNEL_ID = int(environ.get('FSUB_CHANNEL_ID', -1002455211039))
     FSUB_BUTTON_NAME = environ.get('FSUB_BUTTON_NAME', 'Join Channel')
     CHANNEL_USERNAME = environ.get('CHANNEL_USERNAME', 'TrollReleases')
     # ======================================================================
