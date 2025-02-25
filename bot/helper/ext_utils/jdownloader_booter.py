@@ -1,3 +1,4 @@
+import os
 from aiofiles.os import listdir, path as aiopath
 from json import dump
 from random import randint
@@ -8,6 +9,7 @@ from bot import bot, config_dict, jd_lock, LOGGER, FFMPEG_NAME
 from bot.helper.ext_utils.bot_utils import cmd_exec, new_task, sync_to_async
 from myjd import Myjdapi
 from myjd.exception import MYJDException, MYJDAuthFailedException, MYJDEmailForbiddenException, MYJDEmailInvalidException, MYJDErrorEmailNotConfirmedException
+os.makedirs('/JDownloader/cfg/', exist_ok=True)
 
 
 class JDownloader(Myjdapi):
