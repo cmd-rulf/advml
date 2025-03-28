@@ -112,10 +112,10 @@ def get_progress_bar_string(pct: str):
     p = min(max(pct, 0), 100)
     cFull = int(p // 8)
     cPart = int(p % 8 - 1)
-    p_str = '■' * cFull
+    p_str = '⬤' * cFull
     if cPart >= 0:
-        p_str += ['▤', '▥', '▦', '▧', '▨', '▩', '■'][cPart]
-    p_str += '□' * (12 - cFull)
+        p_str += ['○', '○', '◔', '◔', '◑', '◑', '◕', '◕'][cPart]
+    p_str += '○' * (12 - cFull)
     return f"[{p_str}]"
 
 
@@ -125,7 +125,7 @@ def action(message: Message):
 
 
 def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='All', page_step: int=1):
-    msg = f'<a href="https://t.me/aspirantDiscuss"><b><i>Bot Of Honey leech</b></i></a>\n'
+    msg = f'<a href="https://t.me/h_oneysingh"><b><i>Bot By Honey</b></i></a>\n\n'
     dl_speed = up_speed = 0
 
     if status == 'All':
@@ -149,40 +149,40 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
         if task.listener.isSuperChat:
             reply_to = task.listener.message.reply_to_message
             link = task.listener.message.link if not reply_to or getattr(reply_to.from_user, 'is_bot', None) else reply_to.link
-            msg += f'\n<b><a href="{link}"><i>{tstatus}...</i></a></b>'
+            msg += f'\n\n<b>┌ <a href="{link}"><i>{tstatus}...</i></a></b>'
         else:
-            msg += f'\n<b><i>{tstatus}...</i></b>'
-        ext_msg = (f'\n<b>Engine:<i> {task.engine()}</i></b>'
-                   f'\n<b>By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.isSuperChat else ''
-                   f'\n<b>Action:</b> {action(task.listener.message)}')
+            msg += f'\n<b>┌ <i>{tstatus}...</i></b>'
+        ext_msg = (f'\n<b>├ Engine:<i> {task.engine()}</i></b>'
+                   f'\n<b>├ By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.isSuperChat else ''
+                   f'\n<b>├ Action:</b> {action(task.listener.message)}')
         if tstatus not in [MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_METADATA, MirrorStatus.STATUS_SUBSYNC]:
-            msg += (f'\n<b>{get_progress_bar_string(task.progress())}</b>'
-                    f'\n<b>Progress:</b> {task.progress()}')
+            msg += (f'\n<b>├ </b>{get_progress_bar_string(task.progress())}'
+                    f'\n<b>├ Progress:</b> {task.progress()}')
             if tstatus == MirrorStatus.STATUS_SPLITTING and task.listener.isLeech:
-                msg += f'\n<b>Split Size:</b> {get_readable_file_size(task.listener.splitSize)}'
-            msg += (f'\n<b>Processed:</b> {task.processed_bytes()}'
-                    f'\n<b>Total Size:</b> {task.size()}'
-                    f'\n<b>Speed:</b> {task.speed()}'
-                    f'\n<b>ETA:</b> {task.eta() or "~"}'
-                    f'\n<b>Elapsed: </b>{task.elapsed() or "~"}')
+                msg += f'\n<b>├ Split Size:</b> {get_readable_file_size(task.listener.splitSize)}'
+            msg += (f'\n<b>├ Processed:</b> {task.processed_bytes()}'
+                    f'\n<b>├ Total Size:</b> {task.size()}'
+                    f'\n<b>├ Speed:</b> {task.speed()}'
+                    f'\n<b>├ ETA:</b> {task.eta() or "~"}'
+                    f'\n<b>├ Elapsed: </b>{task.elapsed() or "~"}')
             if tstatus == MirrorStatus.STATUS_WAIT:
-                msg += f'\n<b>Timeout: </b>{task.timeout()}'
+                msg += f'\n<b>├ Timeout: </b>{task.timeout()}'
             if hasattr(task, 'seeders_num'):
                 try:
-                    msg += f'\n<b>S/L:</b> {task.seeders_num()}/{task.leechers_num()}'
+                    msg += f'\n<b>├ S/L:</b> {task.seeders_num()}/{task.leechers_num()}'
                 except:
                     pass
         elif tstatus == MirrorStatus.STATUS_SEEDING:
-            msg += (f'\n<b>Size:</b> {task.size()}'
-                    f'\n<b>Speed:</b> {task.upload_speed()}'
-                    f'\n<b>Uploaded:</b> {task.uploaded_bytes()}'
-                    f'\n<b>Ratio:</b> {task.ratio()}'
-                    f'\n<b>Time:</b> {task.seeding_time()}'
-                    f'\n<b>S/L:</b> {task.seeders_num()}/{task.leechers_num()}')
+            msg += (f'\n<b>├ Size:</b> {task.size()}'
+                    f'\n<b>├ Speed:</b> {task.upload_speed()}'
+                    f'\n<b>├ Uploaded:</b> {task.uploaded_bytes()}'
+                    f'\n<b>├ Ratio:</b> {task.ratio()}'
+                    f'\n<b>├ Time:</b> {task.seeding_time()}'
+                    f'\n<b>├ S/L:</b> {task.seeders_num()}/{task.leechers_num()}')
         else:
-            msg += (f'\n<b>Size:</b> {task.size()}'
-                    f'\n<b>Elapsed:</b> {task.elapsed() or "~"}')
-        msg += f'{ext_msg}\n<code>/{BotCommands.CancelTaskCommand} {task.gid()}</code>\n\n'
+            msg += (f'\n<b>├ Size:</b> {task.size()}'
+                    f'\n<b>├ Elapsed:</b> {task.elapsed() or "~"}')
+        msg += f'{ext_msg}\n<b>└ </b><code>/{BotCommands.CancelTaskCommand} {task.gid()}</code>\n\n'
 
     if not msg:
         if status == 'All':
@@ -213,7 +213,7 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
         for label, status_value in STATUS_VALUES:
             if status_value != status:
                 buttons.button_data(label, f'status {sid} st {status_value}')
-    buttons.button_data('🍑', f'status {sid} ref', 'header')
+    buttons.button_data('♻️', f'status {sid} ref', 'header')
     if is_user:
         buttons.button_data('✘', f'status {sid} cls', 'header')
     msg += ('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n'
