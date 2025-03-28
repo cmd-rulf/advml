@@ -43,37 +43,36 @@ from bot.modules import (authorize, bot_settings, clone, exec, gd_count, gd_dele
 @new_task
 async def stats(_, message: Message):
     if await aiopath.exists('.git'):
-        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd \n<b>➡️ From</b> %cr'", True)
+        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd \n<b>🌚 From</b> %cr'", True)
         last_commit = last_commit[0]
     else:
         last_commit = 'No UPSTREAM_REPO'
     cpu, mem, disk, swap = f'{cpu_percent(interval=1)}%', f'{virtual_memory().percent}%', f'{disk_usage("/")[3]}%', f'{swap_memory().percent}%'
     msg = f'''
 <b>UPSTREAM REPO AND BOT STATUS</b>
-<b>➡️ Commit Date:</b> {last_commit}
-<b>➡️ Bot Uptime:</b> {get_readable_time(time() - botStartTime)}
-<b>➡️ OS Uptime:</b> {get_readable_time(time() - boot_time())}\n\n
+<b>🌚 Commit Date:</b> {last_commit}
+<b>🌚 Bot Uptime:</b> {get_readable_time(time() - botStartTime)}
+<b>🌚 OS Uptime:</b> {get_readable_time(time() - boot_time())}\n\n
 <b>SYSTEM STATUS</b>
-<b>➡️ Total Cores:</b> {cpu_count(logical=True)}
-<b>➡️ Physical Cores:</b> {cpu_count(logical=False)}
-<b>➡️ Upload:</b> {get_readable_file_size(net_io_counters().bytes_sent)}
-<b>➡️ Download:</b> {get_readable_file_size(net_io_counters().bytes_recv)}
-<b>➡️ Disk Free:</b> {get_readable_file_size(disk_usage('/')[2])}
-<b>➡️ Disk Used:</b> {get_readable_file_size(disk_usage('/')[1])}
-<b>➡️ Disk Space:</b> {get_readable_file_size(disk_usage('/')[0])}
-<b>➡️ Memory Free:</b> {get_readable_file_size(virtual_memory().available)}
-<b>➡️ Memory Used:</b> {get_readable_file_size(virtual_memory().used)}
-<b>➡️ Memory Swap:</b> {get_readable_file_size(swap_memory().total)}
-<b>➡️ Memory Total:</b> {get_readable_file_size(virtual_memory().total)}
-<b>➡️ CPU:</b> {get_progress_bar_string(cpu)} {cpu}
-<b>➡️ RAM:</b> {get_progress_bar_string(mem)} {mem}
-<b>➡️ DISK:</b> {get_progress_bar_string(disk)} {disk}
-<b>➡️ SWAP:</b> {get_progress_bar_string(swap)} {swap}
-<b>➡️ OS:</b> {system()}, {architecture()[0]}, {release()}\n
+<b>🌚 Total Cores:</b> {cpu_count(logical=True)}
+<b>🌚 Physical Cores:</b> {cpu_count(logical=False)}
+<b>🌚 Upload:</b> {get_readable_file_size(net_io_counters().bytes_sent)}
+<b>🌚 Download:</b> {get_readable_file_size(net_io_counters().bytes_recv)}
+<b>🌚 Disk Free:</b> {get_readable_file_size(disk_usage('/')[2])}
+<b>🌚 Disk Used:</b> {get_readable_file_size(disk_usage('/')[1])}
+<b>🌚 Disk Space:</b> {get_readable_file_size(disk_usage('/')[0])}
+<b>🌚 Memory Free:</b> {get_readable_file_size(virtual_memory().available)}
+<b>🌚 Memory Used:</b> {get_readable_file_size(virtual_memory().used)}
+<b>🌚 Memory Swap:</b> {get_readable_file_size(swap_memory().total)}
+<b>🌚 Memory Total:</b> {get_readable_file_size(virtual_memory().total)}
+<b>🌚 CPU:</b> {get_progress_bar_string(cpu)} {cpu}
+<b>🌚 RAM:</b> {get_progress_bar_string(mem)} {mem}
+<b>🌚 DISK:</b> {get_progress_bar_string(disk)} {disk}
+<b>🌚 SWAP:</b> {get_progress_bar_string(swap)} {swap}
+<b>🌚 OS:</b> {system()}, {architecture()[0]}, {release()}\n
 '''
     statsmsg = await sendingMessage(msg, message, config_dict['IMAGE_STATS'])
     await auto_delete_message(message, statsmsg)
-
 
 
 @new_task
@@ -139,7 +138,7 @@ async def start(client: Client, message: Message):
         else:
             text = ('<b>Bot ready to use...</b>'
                     'Back to the group and happy mirroring...\n'
-                    'All mirror and leech file(s) will send here and log channel\n\n'
+                    'All mirror and leech file(s) will send here\n\n'
                     f'Join @{config_dict["CHANNEL_USERNAME"]} for more info...')
     else:
         text, image = config_dict['START_MESSAGE'] or '<b>Upss...</b>\nNot authorized user!', config_dict['IMAGE_UNAUTH']
