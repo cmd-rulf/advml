@@ -1,5 +1,4 @@
-import os
-from aiofiles.os import listdir, path as aiopath
+from aiofiles.os import listdir, path as aiopath, makedirs
 from json import dump
 from random import randint
 from re import search as re_search, I
@@ -7,12 +6,11 @@ from time import sleep
 
 from bot import bot, config_dict, jd_lock, LOGGER, FFMPEG_NAME
 from bot.helper.ext_utils.bot_utils import cmd_exec, new_task, sync_to_async
-from myjd import Myjdapi
+from myjd import MyJdApi
 from myjd.exception import MYJDException, MYJDAuthFailedException, MYJDEmailForbiddenException, MYJDEmailInvalidException, MYJDErrorEmailNotConfirmedException
-os.makedirs('/JDownloader/cfg/', exist_ok=True)
 
 
-class JDownloader(Myjdapi):
+class JDownloader(MyJdApi):
     def __init__(self):
         super().__init__()
         self._username = ''
@@ -46,6 +44,7 @@ class JDownloader(Myjdapi):
                  'password': config_dict['JD_PASS'],
                  'devicename': self._device_name,
                  'email': config_dict['JD_EMAIL']}
+        await makedirs("/JDownloader/cfg", exist_ok=True)
         ffdata = {'binarypath': f'/usr/bin/{FFMPEG_NAME}', 'binarypathprobe': '/usr/bin/ffprobe'}
         jdsetpath = '/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json'
         jdffpath = '/JDownloader/cfg/org.jdownloader.controlling.ffmpeg.FFmpegSetup.json'
