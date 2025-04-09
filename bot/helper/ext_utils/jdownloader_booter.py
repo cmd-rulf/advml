@@ -6,11 +6,11 @@ from time import sleep
 
 from bot import bot, config_dict, jd_lock, LOGGER, FFMPEG_NAME
 from bot.helper.ext_utils.bot_utils import cmd_exec, new_task, sync_to_async
-from myjd import MyJdApi
+from myjd import Myjdapi
 from myjd.exception import MYJDException, MYJDAuthFailedException, MYJDEmailForbiddenException, MYJDEmailInvalidException, MYJDErrorEmailNotConfirmedException
 
 
-class JDownloader(MyJdApi):
+class JDownloader(Myjdapi):
     def __init__(self):
         super().__init__()
         self._username = ''
