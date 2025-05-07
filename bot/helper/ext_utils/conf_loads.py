@@ -271,9 +271,6 @@ async def load_config():
     LEECH_SPLIT_SIZE = environ.get('LEECH_SPLIT_SIZE', '')
     LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE) if LEECH_SPLIT_SIZE else ''
 
-    MEGA_LIMIT = environ.get('MEGA_LIMIT', '')
-    MEGA_LIMIT = float(MEGA_LIMIT) if MEGA_LIMIT else ''
-
     NONPREMIUM_LIMIT = environ.get('NONPREMIUM_LIMIT', '5')
     NONPREMIUM_LIMIT = float(NONPREMIUM_LIMIT) if NONPREMIUM_LIMIT else ''
 
@@ -567,7 +564,6 @@ async def load_config():
                         'CLONE_LIMIT': CLONE_LIMIT,
                         'LEECH_LIMIT': LEECH_LIMIT,
                         'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-                        'MEGA_LIMIT': MEGA_LIMIT,
                         'NONPREMIUM_LIMIT': NONPREMIUM_LIMIT,
                         'STATUS_LIMIT': STATUS_LIMIT,
                         'TORRENT_DIRECT_LIMIT': TORRENT_DIRECT_LIMIT,

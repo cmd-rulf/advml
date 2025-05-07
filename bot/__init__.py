@@ -301,9 +301,6 @@ LEECH_LIMIT = float(LEECH_LIMIT) if LEECH_LIMIT else ''
 LEECH_SPLIT_SIZE = environ.get('LEECH_SPLIT_SIZE', '')
 LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE) if LEECH_SPLIT_SIZE else ''
 
-MEGA_LIMIT = environ.get('MEGA_LIMIT', '')
-MEGA_LIMIT = float(MEGA_LIMIT) if MEGA_LIMIT else ''
-
 NONPREMIUM_LIMIT = environ.get('NONPREMIUM_LIMIT', '5')
 NONPREMIUM_LIMIT = float(NONPREMIUM_LIMIT) if NONPREMIUM_LIMIT else ''
 
@@ -315,14 +312,7 @@ TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT) if TORRENT_DIRECT_LIMIT else 
 
 TOTAL_TASKS_LIMIT = environ.get('TOTAL_TASKS_LIMIT', '')
 TOTAL_TASKS_LIMIT = int(TOTAL_TASKS_LIMIT) if TOTAL_TASKS_LIMIT else ''
-
-MEGA_EMAIL = environ.get('MEGA_EMAIL', '')
-MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
-if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
-    log_warning('MEGA Credentials not provided!')
-    MEGA_EMAIL = ''
-    MEGA_PASSWORD = ''
-            
+  
 USER_TASKS_LIMIT = environ.get('USER_TASKS_LIMIT', '')
 USER_TASKS_LIMIT = int(USER_TASKS_LIMIT) if USER_TASKS_LIMIT else ''
 
@@ -551,8 +541,6 @@ config_dict = {'BOT_TOKEN': BOT_TOKEN,
                'SUDO_USERS': SUDO_USERS,
                'EXTENSION_FILTER': EXTENSION_FILTER,
                'INDEX_URL': INDEX_URL,
-               'MEGA_EMAIL': MEGA_EMAIL,
-               'MEGA_PASSWORD': MEGA_PASSWORD,
                'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
                'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                'INCOMPLETE_AUTO_RESUME': INCOMPLETE_AUTO_RESUME,
@@ -602,7 +590,6 @@ config_dict = {'BOT_TOKEN': BOT_TOKEN,
                'CLONE_LIMIT': CLONE_LIMIT,
                'LEECH_LIMIT': LEECH_LIMIT,
                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-               'MEGA_LIMIT': MEGA_LIMIT,
                'NONPREMIUM_LIMIT': NONPREMIUM_LIMIT,
                'STATUS_LIMIT': STATUS_LIMIT,
                'TORRENT_DIRECT_LIMIT': TORRENT_DIRECT_LIMIT,

@@ -116,7 +116,7 @@ Tasks ({count})
 ZIP: {archive} | UZIP: {extract} | SPL: {split} | DL: {download} | UL {upload} | QDL: {queuedl} | QUL: {queueul} | PS: {pause} | SD: {seed} | CL: {clone} | SV: {samvid}
 
 Limits
-DL: {config_dict.get('TORRENT_DIRECT_LIMIT', '~ ')}GB | Z/U: {config_dict.get('ZIP_UNZIP_LIMIT', '~ ')}GB | MG: {config_dict.get('MEGA_LIMIT', '~ ')}GB
+DL: {config_dict.get('TORRENT_DIRECT_LIMIT', '~ ')}GB | Z/U: {config_dict.get('ZIP_UNZIP_LIMIT', '~ ')}GB 
 '''
                 await query.answer(msg, True)
     except:
