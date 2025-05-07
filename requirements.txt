@@ -18,7 +18,7 @@ gunicorn
 httpx
 html_telegraph_poster
 lxml
-mega
+megaapi==4.30
 motor
 natsort
 pillow
