@@ -130,8 +130,6 @@ def bluemediafile(url, torrent=True):
     else:
         res = cget('get', 'https://bluemediafiles.com/get-url.php', params=params, headers=headers)
         furl = res.url
-        if 'mega.nz' in furl:
-            furl = furl.replace('mega.nz/%23!', 'mega.nz/file/').replace('!', '#')
     try:
         return furl
     except Exception as e:
