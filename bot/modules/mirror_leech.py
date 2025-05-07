@@ -1,8 +1,6 @@
 from secrets import token_hex
 from aiofiles.os import makedirs
-
 from mega import MegaApi
-
 from .... import LOGGER, task_dict, task_dict_lock
 from ....core.config_manager import Config
 from ...ext_utils.links_utils import get_mega_link_type
@@ -25,7 +23,6 @@ from ...listeners.mega_listener import (
     AsyncMega,
 )
 
-
 async def add_mega_download(listener, path):
     async_api = AsyncMega()
     async_api.api = api = MegaApi(None, None, None, "SEARCH-X")
@@ -43,9 +40,14 @@ async def add_mega_download(listener, path):
 
     # Login if credentials are provided
     if (MEGA_EMAIL := Config.MEGA_EMAIL) and (MEGA_PASSWORD := Config.MEGA_PASSWORD):
-        login_success = await async_api.login(MEGA_EMAIL, MEGA_PASSWORD)
-        if not login_success:
-            await listener.on_download_error("Mega login failed after retries")
+        try:
+            login_success = await async_api.login(MEGA_EMAIL, MEGA_PASSWORD)
+            if not login_success:
+                await listener.on_download_error("Mega login failed after retries")
+                return
+        except Exception as e:
+            LOGGER.error(f"Mega login error: {e}")
+            await listener.on_download_error(f"Mega login failed: {str(e)}")
             return
 
     try:
@@ -124,4 +126,9 @@ async def add_mega_download(listener, path):
         LOGGER.error(f"Error in Mega download: {e}", exc_info=True)
         await listener.on_download_error(str(e))
     finally:
-        await async_api.logout()
+        try:
+            await async_api.logout()
+            if folder_api:
+                await sync_to_async(folder_api.logout)
+        except Exception as e:
+            LOGGER.error(f"Error during Mega logout: {e}")
