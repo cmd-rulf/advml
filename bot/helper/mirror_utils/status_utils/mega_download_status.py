@@ -2,20 +2,20 @@ from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStat
 
 
 class MegaDownloadStatus:
-    def __init__(self, name, size, gid, obj, message):
-        self.__obj = obj
-        self.__name = name
-        self.__size = size
-        self.__gid = gid
+    def _init_(self, name, size, gid, obj, message):
+        self._obj = obj
+        self._name = name
+        self._size = size
+        self._gid = gid
         self.message = message
         self.engine = "Mega Sdk"
 
     def name(self):
-        return self.__name
+        return self._name
 
     def progress_raw(self):
         try:
-            return round(self.__obj.downloaded_bytes / self.__size * 100, 2)
+            return round(self._obj.downloaded_bytes / self._size * 100, 2)
         except:
             return 0.0
 
@@ -26,26 +26,26 @@ class MegaDownloadStatus:
         return MirrorStatus.STATUS_DOWNLOADING
 
     def processed_bytes(self):
-        return get_readable_file_size(self.__obj.downloaded_bytes)
+        return get_readable_file_size(self._obj.downloaded_bytes)
 
     def eta(self):
         try:
-            seconds = (self.__size - self.__obj.downloaded_bytes) / self.__obj.speed
+            seconds = (self._size - self._obj.downloaded_bytes) / self._obj.speed
             return get_readable_time(seconds)
         except ZeroDivisionError:
             return '-'
 
     def size(self):
-        return get_readable_file_size(self.__size)
+        return get_readable_file_size(self._size)
 
     def speed(self):
-        return f'{get_readable_file_size(self.__obj.speed)}/s'
+        return f'{get_readable_file_size(self._obj.speed)}/s'
 
     def gid(self):
-        return self.__gid
+        return self._gid
 
     def download(self):
-        return self.__obj
+        return self._obj
 
     async def cancel_download(self):
-        await self.__obj.cancel_download()
+        await self._obj.cancel_download()
