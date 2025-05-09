@@ -134,20 +134,21 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status: str='A
     for index, task in enumerate(tasks[start_position:STATUS_LIMIT + start_position], start=1):
         tstatus = task.status()
         msg += f'<b>{index+start_position}.</b> <code>{escape(str(task.name())) or "N/A"}</code>'
-        if hasattr(task.listener, 'isSuperChat') and task.listener.isSuperChat:
-            reply_to = task.listener.message.reply_to_message
-            link = task.listener.message.link if not reply_to or getattr(reply_to.from_user, 'is_bot', None) else reply_to.link
+        listener = task.listener if not callable(task.listener) else task.listener()
+        if hasattr(listener, 'isSuperChat') and listener.isSuperChat:
+            reply_to = listener.message.reply_to_message
+            link = listener.message.link if not reply_to or getattr(reply_to.from_user, 'is_bot', None) else reply_to.link
             msg += f'\n\n<b>┌ <a href="{link}"><i>{tstatus}...</i></a></b>'
         else:
             msg += f'\n<b>┌ <i>{tstatus}...</i></b>'
         ext_msg = (f'\n<b>├ Engine:<i> {task.engine()}</i></b>'
-                   f'\n<b>├ By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if hasattr(task.listener, 'isSuperChat') and task.listener.isSuperChat else ''
-                   f'\n<b>├ Action:</b> {action(task.listener.message)}')
+                   f'\n<b>├ By:</b> <a href="https://t.me/{listener.message.from_user.username}">{listener.message.from_user.first_name}</a>' if hasattr(listener, 'isSuperChat') and listener.isSuperChat else ''
+                   f'\n<b>├ Action:</b> {action(listener.message)}')
         if tstatus not in [MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_METADATA, MirrorStatus.STATUS_SUBSYNC]:
             msg += (f'\n<b>├ </b>{get_progress_bar_string(task.progress())}'
                     f'\n<b>├ Progress:</b> {task.progress()}')
-            if tstatus == MirrorStatus.STATUS_SPLITTING and task.listener.isLeech:
-                msg += f'\n<b>├ Split Size:</b> {get_readable_file_size(task.listener.splitSize)}'
+            if tstatus == MirrorStatus.STATUS_SPLITTING and listener.isLeech:
+                msg += f'\n<b>├ Split Size:</b> {get_readable_file_size(listener.splitSize)}'
             msg += (f'\n<b>├ Processed:</b> {task.processed_bytes()}'
                     f'\n<b>├ Total Size:</b> {task.size()}'
                     f'\n<b>├ Speed:</b> {task.speed()}'

@@ -38,5 +38,6 @@ class MegaDownloadStatus:
     def engine(self):
         return "Mega"
 
+    @property
     def listener(self):
-        return self.__listener  # Provide access to the listener object
+        return self.__listener  # Provide access to the listener object as a property

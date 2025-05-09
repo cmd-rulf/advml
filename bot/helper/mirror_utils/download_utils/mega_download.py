@@ -38,7 +38,6 @@ class MegaAppListener(MegaListener):
         self.__bytes_transferred = 0
         self.__speed = 0
         self.__name = ""
-
         super().__init__()
 
     @property
@@ -110,7 +109,6 @@ class MegaAppListener(MegaListener):
         LOGGER.error(f"Mega download error in file {transfer} {filen}: {error}")
         if state in [1, 4]:
             return
-
         self.error = errStr
         if not self.is_cancelled:
             self.is_cancelled = True
