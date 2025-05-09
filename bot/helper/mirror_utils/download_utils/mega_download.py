@@ -8,9 +8,9 @@ from bot import (
     non_queued_dl,
     queue_dict_lock,
 )
+from bot.helper.ext_utils.links_utils import get_mega_link_type,
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import (
-    get_mega_link_type,
     async_to_sync,
     sync_to_async,
 )
