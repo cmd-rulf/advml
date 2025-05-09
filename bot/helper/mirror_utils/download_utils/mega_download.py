@@ -22,6 +22,7 @@ from bot.helper.ext_utils.task_manager import (
     stop_duplicate_check,
 )
 from aiofiles.os import makedirs
+from secrets import token_hex
 
 
 class MegaAppListener(MegaListener):
@@ -181,7 +182,7 @@ async def add_mega_download(mega_link, path, listener, name):
     if added_to_queue:
         LOGGER.info(f"Added to Queue/Download: {name}")
         async with download_dict_lock:
-            download_dict[listener.uid] = QueueStatus(name, size, gid, listener, "Dl")
+            download_dict[listener.uid] = QueueStatus(listener, size, gid, 'dl')
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
         await event.wait()
@@ -198,7 +199,7 @@ async def add_mega_download(mega_link, path, listener, name):
 
     async with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(
-            name, size, gid, mega_listener, listener.message, listener.upload_details
+            name, size, gid, mega_listener, listener.message
         )
     async with queue_dict_lock:
         non_queued_dl.add(listener.uid)
