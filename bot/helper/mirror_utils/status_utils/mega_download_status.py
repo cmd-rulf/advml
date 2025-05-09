@@ -8,7 +8,7 @@ class MegaDownloadStatus:
         self._size = size
         self._gid = gid
         self.message = message
-        self.engine = "Mega Sdk"
+        self.engine = 'Mega Sdk'
 
     def name(self):
         return self._name
@@ -20,7 +20,7 @@ class MegaDownloadStatus:
             return 0.0
 
     def progress(self):
-        return f"{self.progress_raw()}%"
+        return f'{self.progress_raw()}%'
 
     def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
