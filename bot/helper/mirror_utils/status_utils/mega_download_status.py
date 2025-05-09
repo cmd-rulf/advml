@@ -1,4 +1,5 @@
 from time import time
+from bot import LOGGER
 from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 class MegaDownloadStatus:
@@ -33,9 +34,18 @@ class MegaDownloadStatus:
         return f"{get_readable_file_size(self.__mega_listener.speed)}/s"
 
     def eta(self):
-        return get_readable_time(
-            (self.__size - self.__mega_listener.downloaded_bytes) / self.__mega_listener.speed
-        ) if self.__mega_listener.speed else "~"
+        try:
+            remaining_bytes = self.__size - self.__mega_listener.downloaded_bytes
+            speed = self.__mega_listener.speed
+            LOGGER.debug(f"Mega ETA - Remaining: {remaining_bytes} bytes, Speed: {speed} bytes/s")
+            if speed > 0 and remaining_bytes > 0:
+                eta_seconds = remaining_bytes / speed
+                if eta_seconds < 86400:  # Cap ETA at 1 day to avoid unrealistic values
+                    return get_readable_time(eta_seconds)
+            return "~"
+        except Exception as e:
+            LOGGER.error(f"Mega ETA calculation failed: {e}")
+            return "~"
 
     def elapsed(self):
         return get_readable_time(time() - self.__start_time)  # Calculate elapsed time
