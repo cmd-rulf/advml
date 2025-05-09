@@ -2,7 +2,7 @@ from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStat
 
 
 class MegaDownloadStatus:
-    def _init_(self, name, size, gid, obj, message):
+    def __init__(self, name, size, gid, obj, message):
         self._obj = obj
         self._name = name
         self._size = size
