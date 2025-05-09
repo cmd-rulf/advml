@@ -3,8 +3,8 @@ from mega import MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError
 from bot import (
     LOGGER,
     config_dict,
-    download_dict_lock,
-    download_dict,
+    task_dict_lock,
+    task_dict,
     non_queued_dl,
     queue_dict_lock,
 )
@@ -181,13 +181,13 @@ async def add_mega_download(mega_link, path, listener, name):
     added_to_queue, event = await is_queued(listener.uid)
     if added_to_queue:
         LOGGER.info(f"Added to Queue/Download: {name}")
-        async with download_dict_lock:
-            download_dict[listener.uid] = QueueStatus(listener, size, gid, 'dl')
+        async with task_dict_lock:
+            task_dict[listener.uid] = QueueStatus(listener, size, gid, 'dl')
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
         await event.wait()
-        async with download_dict_lock:
-            if listener.uid not in download_dict:
+        async with task_dict_lock:
+            if listener.uid not in task_dict:
                 await executor.do(api.logout, ())
                 if folder_api is not None:
                     await executor.do(folder_api.logout, ())
@@ -197,8 +197,8 @@ async def add_mega_download(mega_link, path, listener, name):
     else:
         from_queue = False
 
-    async with download_dict_lock:
-        download_dict[listener.uid] = MegaDownloadStatus(
+    async with task_dict_lock:
+        task_dict[listener.uid] = MegaDownloadStatus(
             name, size, gid, mega_listener, listener.message
         )
     async with queue_dict_lock:
