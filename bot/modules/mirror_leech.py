@@ -43,281 +43,247 @@ class Mirror(TaskListener):
         self.multiTag = multiTag
         self.options = options
         self.sameDir = sameDir
-        self.bulk = bulk
+andoli
+
+System: You are Grok 3 built by xAI.
+
+I've received your request to incorporate the old versions of `mega_download_status.py` and `queue_status.py` into the Mega download system for the bot application. Below, I’ll provide a complete solution that integrates these files with the previously provided `mega_download.py` and `mirror.py`, along with all necessary additional files to ensure the system works. The solution will include updates to handle the dependencies and references in the old status files, ensuring compatibility with the bot’s architecture.
+
+### Approach
+1. **Incorporate Old Status Files**:
+   - Use the provided `mega_download_status.py` and `queue_status.py` as the primary status management classes.
+   - Update `mega_download.py` to align with these status classes, ensuring proper initialization and method calls.
+2. **Update Dependencies**:
+   - Provide implementations for `MirrorStatus`, `get_readable_file_size`, `get_readable_time`, and other utilities referenced in the status files.
+   - Include necessary modules like `task_manager.py` for queue and limit checks, and `status_utils.py` for status constants.
+3. **Complete File Set**:
+   - Provide all required files, including updated versions of previously provided files (`bot.py`, `bot_utils.py`, etc.) to resolve dependencies.
+   - Ensure the `mirror.py` integration for Mega downloads remains consistent with the provided code.
+4. **Project Structure and Setup**:
+   - Outline the project structure and provide installation instructions to set up the environment.
+
+### Complete Code Solution
+Below is the full set of files required to make the Mega download system work with the old `mega_download_status.py` and `queue_status.py`. Each file is wrapped in an `<xaiArtifact>` tag with a unique `artifact_id` and appropriate `contentType`. If a file is unchanged from the previous response, I’ll reuse its `artifact_id` to indicate it’s an updated version.
+
+#### 1. `mega_download.py`
+This is the corrected version, updated to work with the old `mega_download_status.py` and `queue_status.py`.
+
+<xaiArtifact artifact_id="31db247c-46d9-49cf-b9b4-39ba80781776" artifact_version_id="884c121c-65a2-4343-8e3d-c982c30ceb9a" title="mega_download.py" contentType="text/python">
+from asyncio import Event
+from mega import MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError
+from bot import (
+    LOGGER,
+    config_dict,
+    download_dict_lock,
+    download_dict,
+    non_queued_dl,
+    queue_dict_lock,
+)
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
+from bot.helper.ext_utils.bot_utils import (
+    get_mega_link_type,
+    async_to_sync,
+    sync_to_async,
+)
+from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.ext_utils.task_manager import (
+    is_queued,
+    limit_checker,
+    stop_duplicate_check,
+)
+from aiofiles.os import makedirs
+from secrets import token_hex
+
+
+class MegaAppListener(MegaListener):
+    _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN, MegaRequest.TYPE_FETCH_NODES)
+    NO_ERROR = "no error"
+
+    def __init__(self, continue_event: Event, listener):
+        self.continue_event = continue_event
+        self.node = None
+        self.public_node = None
+        self.listener = listener
+        self.is_cancelled = False
+        self.error = None
+        self.__bytes_transferred = 0
+        self.__speed = 0
+        self.__name = ""
         super().__init__()
-        self.isQbit = isQbit
-        self.isLeech = isLeech
-        self.vidMode = vidMode
-        self.isJd = isJd
 
-    @new_task
-    async def newEvent(self):
-        text = self.message.text.split('\n')
-        await self.getTag(text)
+    @property
+    def speed(self):
+        return self.__speed
 
-        reply_to = self.message.reply_to_message
-        if fmsg := await UseCheck(self.message, self.isLeech).run(True, daily=True, ml_chek=True, session=True, send_pm=True):
-            self.removeFromSameDir()
-            await auto_delete_message(self.message, fmsg, reply_to)
+    @property
+    def downloaded_bytes(self):
+        return self.__bytes_transferred
+
+    def onRequestFinish(self, api, request, error):
+        if str(error).lower() != "no error":
+            self.error = error.copy()
+            LOGGER.error(f"Mega onRequestFinishError: {self.error}")
+            self.continue_event.set()
             return
+        request_type = request.getType()
+        if request_type == MegaRequest.TYPE_LOGIN:
+            api.fetchNodes()
+        elif request_type == MegaRequest.TYPE_GET_PUBLIC_NODE:
+            self.public_node = request.getPublicMegaNode()
+            self.__name = self.public_node.getName()
+        elif request_type == MegaRequest.TYPE_FETCH_NODES:
+            LOGGER.info("Fetching Root Node.")
+            self.node = api.getRootNode()
+            self.__name = self.node.getName()
+            LOGGER.info(f"Node Name: {self.node.getName()}")
+        if (
+            request_type not in self._NO_EVENT_ON
+            or self.node
+            and "cloud drive" not in self.__name.lower()
+        ):
+            self.continue_event.set()
 
-        arg_base = {'-i': 0,
-                    '-sp': 0,
-                    '-b': False,
-                    '-d': False,
-                    '-e': False,
-                    '-gf': False,
-                    '-j': False,
-                    '-s': False,
-                    '-ss': False,
-                    '-sv': False,
-                    '-vt': False,
-                    '-z': False,
-                    '-ap': '',
-                    '-au': '',
-                    '-h': '',
-                    '-m': '',
-                    '-n': '',
-                    '-rcf': '',
-                    '-t': '',
-                    '-up': '',
-                    'link': ''}
+    def onRequestTemporaryError(self, api, request, error: MegaError):
+        LOGGER.error(f"Mega Request error in {error}")
+        if not self.is_cancelled:
+            self.is_cancelled = True
+            async_to_sync(
+                self.listener.onDownloadError, f"RequestTempError: {error.toString()}"
+            )
+        self.error = error.toString()
+        self.continue_event.set()
 
-        input_list = text[0].split(' ')
-        args = arg_parser(input_list[1:], arg_base)
+    def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
+        if self.is_cancelled:
+            api.cancelTransfer(transfer, None)
+            self.continue_event.set()
+            return
+        self.__speed = transfer.getSpeed()
+        self.__bytes_transferred = transfer.getTransferredBytes()
 
-        self.compress = args['-z']
-        self.extract = args['-e']
-        self.isGofile = args['-gf']
-        self.join = args['-j']
-        self.link = args['link']
-        self.name = args['-n'].replace('/', '')
-        self.rcFlags = args['-rcf']
-        self.sampleVideo = args['-sv']
-        self.screenShots = args['-ss']
-        self.seed = args['-d']
-        self.select = args['-s']
-        self.splitSize = args['-sp']
-        self.thumb = args['-t']
-        self.upDest = args['-up']
-        self.isRename = self.name
-
-        folder_name = args['-m'].replace('/', '')
-        headers = args['-h']
-        isBulk = args['-b']
-        vidTool = args['-vt']
-        file_ = ratio = seed_time = None
-        bulk_start = bulk_end = 0
-
+    def onTransferFinish(self, api: MegaApi, transfer: MegaTransfer, error):
         try:
-            self.multi = int(args['-i'])
-        except:
-            self.multi = 0
-
-        if not isinstance(self.seed, bool):
-            dargs = self.seed.split(':')
-            ratio = dargs[0] or None
-            if len(dargs) == 2:
-                seed_time = dargs[1] or None
-            self.seed = True
-
-        if not isinstance(isBulk, bool):
-            dargs = isBulk.split(':')
-            bulk_start = dargs[0] or None
-            if len(dargs) == 2:
-                bulk_end = dargs[1] or None
-            isBulk = True
-
-        if config_dict['PREMIUM_MODE'] and not is_premium_user(self.user_id) and (self.multi > 0 or isBulk):
-            await sendMessage(f'Upss {self.tag}, multi/bulk mode for premium user only', self.message)
-            return
-
-        if not isBulk:
-            if folder_name:
-                self.seed = False
-                ratio = seed_time = None
-                if not self.sameDir:
-                    self.sameDir = {'total': self.multi, 'tasks': set(), 'name': folder_name}
-                self.sameDir['tasks'].add(self.mid)
-            elif self.sameDir:
-                self.sameDir['total'] -= 1
-        else:
-            if vidTool and not self.vidMode and self.sameDir:
-                self.vidMode = await SelectMode(self).get_buttons()
-                if not self.vidMode:
-                    return
-            await self.initBulk(input_list, bulk_start, bulk_end, Mirror)
-            return
-
-        if self.bulk:
-            del self.bulk[0]
-
-        if vidTool and (not self.vidMode or not self.sameDir):
-            self.vidMode = await SelectMode(self).get_buttons()
-            if not self.vidMode:
-                self.removeFromSameDir()
-                return
-
-        self.run_multi(input_list, folder_name, Mirror)
-
-        path = ospath.join(f'{config_dict["DOWNLOAD_DIR"]}{self.mid}', folder_name)
-
-        self.link = self.link or get_link(self.message)
-
-        self.editable = await sendMessage('<i>Checking request, please wait...</i>', self.message)
-        if self.link:
-            await sleep(0.5)
-
-        if self.link and is_tele_link(self.link):
-            try:
-                await intialize_savebot(self.user_dict.get('session_string'), True, self.user_id)
-                self.session, reply_to = await get_tg_link_message(self.link, self.user_id)
-            except Exception as e:
-                LOGGER.error(e, exc_info=True)
-                await editMessage(f'ERROR: {e}', self.editable)
-                self.removeFromSameDir()
-                return
-
-        if isinstance(reply_to, list):
-            self.bulk = reply_to
-            self.sameDir = {}
-            b_msg = input_list[:1]
-            self.options = ' '.join(input_list[1:]).replace(self.link, '')
-            b_msg.append(f'{self.bulk[0]} -i {len(self.bulk)} {self.options}')
-            nextmsg = await sendMessage(' '.join(b_msg), self.message)
-            nextmsg = await self.client.get_messages(self.message.chat.id, nextmsg.id)
-            if self.message.from_user:
-                nextmsg.from_user = self.message.from_user
-            else:
-                nextmsg.sender_chat = self.message.sender_chat
-            Mirror(self.client, nextmsg, self.isQbit, self.isJd, self.isLeech, self.vidMode, self.sameDir, self.bulk, self.multiTag, self.options).newEvent()
-            await deleteMessage(self.editable)
-            return
-
-        if reply_to:
-            file_ = is_media(reply_to)
-            if reply_to.document and (file_.mime_type == 'application/x-bittorrent' or file_.file_name.endswith('.torrent')):
-                self.link = await reply_to.download()
-                file_ = None
-
-        if not is_url(self.link) and not is_magnet(self.link) and not await aiopath.exists(self.link) and not is_rclone_path(self.link) and not is_gdrive_id(self.link) and not file_:
-            await gather(editMessage(f'Where Are Links/Files, type /{BotCommands.HelpCommand} for more details.', self.editable), auto_delete_message(self.message, self.editable))
-            self.removeFromSameDir()
-            return
-
-        if self.link:
-            LOGGER.info(self.link)
-
-        if self.isGofile:
-            await editMessage('<i>GoFile upload has been enabled!</i>', self.editable)
-            await sleep(0.5)
-
-        try:
-            await self.beforeStart()
+            if self.is_cancelled:
+                self.continue_event.set()
+            elif transfer.isFinished() and (
+                transfer.isFolderTransfer() or transfer.getFileName() == self.__name
+            ):
+                async_to_sync(self.listener.onDownloadComplete)
+                self.continue_event.set()
         except Exception as e:
-            await editMessage(str(e), self.editable)
-            self.removeFromSameDir()
+            LOGGER.error(e)
+
+    def onTransferTemporaryError(self, api, transfer, error):
+        filen = transfer.getFileName()
+        state = transfer.getState()
+        errStr = error.toString()
+        LOGGER.error(f"Mega download error in file {transfer} {filen}: {error}")
+        if state in [1, 4]:
             return
 
-        if is_mega_link(self.link):
-            self.isJd = False
-            self.isQbit = False
-            await deleteMessage(self.editable)
-            await add_mega_download(self.link, f'{path}/', self, self.name)
-            return
+        self.error = errStr
+        if not self.is_cancelled:
+            self.is_cancelled = True
+            async_to_sync(
+                self.listener.onDownloadError, f"TransferTempError: {errStr} ({filen})"
+            )
+            self.continue_event.set()
 
-        if is_magnet(self.link):
-            self.isJd = False
+    async def cancel_download(self):
+        self.is_cancelled = True
+        await self.listener.onDownloadError("Download Canceled by user")
 
-        if (not self.isJd and not self.isQbit and not is_magnet(self.link) and not is_rclone_path(self.link) and
-            not is_gdrive_link(self.link) and not self.link.endswith('.torrent') and not is_gdrive_id(self.link) and not file_):
-            self.isSharer = is_sharer_link(self.link)
-            content_type = (await get_content_type(self.link))[0]
-            if not content_type or re_match(r'text/html|text/plain', content_type):
-                host = urlparse(self.link).netloc
-                await editMessage(f'<i>Generating direct link from {host}, please wait...</i>', self.editable)
-                try:
-                    self.link = await sync_to_async(direct_link_generator, self.link)
-                    LOGGER.info('Generated link: %s', self.link)
-                    if isinstance(self.link, dict):
-                        contents = self.link['contents']
-                        if len(contents) == 1:
-                            msg = f'<i>Found direct link:</i>\n<code>{contents[0]["url"]}</code>'
-                        else:
-                            msg = '<i>Found folder ddl link...</i>'
-                    elif isinstance(self.link, tuple):
-                        if len(self.link) == 3:
-                            self.link, self.name, headers = self.link
-                        else:
-                            self.link, headers = self.link
-                        msg = f'<i>Found direct link:</i>\n<code>{self.link}</code>'
-                    else:
-                        msg = f"<i>Found {'drive' if 'drive.google.com' in self.link else 'direct'} link:</i>\n<code>{self.link}</code>"
-                    await editMessage(msg, self.editable)
-                    await sleep(1)
-                except DirectDownloadLinkException as e:
-                    if str(e).startswith('ERROR:'):
-                        await editMessage(f'{self.tag}, {e}', self.editable)
-                        self.removeFromSameDir()
-                        return
-        if not self.isJd:
-            await deleteMessage(self.editable)
 
-        if file_:
-            await TelegramDownloadHelper(self).add_download(reply_to, path)
-        elif isinstance(self.link, dict):
-            await add_direct_download(self, path)
-        elif self.isJd:
-            try:
-                await add_jd_download(self, f'{path}/')
-            except (Exception, MYJDException) as e:
-                LOGGER.error(e)
-                await editMessage(f'{e}'.strip(), self.editable)
-                self.removeFromSameDir()
+class AsyncExecutor:
+    def __init__(self):
+        self.continue_event = Event()
+
+    async def do(self, function, args):
+        self.continue_event.clear()
+        await sync_to_async(function, *args)
+        await self.continue_event.wait()
+
+
+async def add_mega_download(mega_link, path, listener, name):
+    MEGA_EMAIL = config_dict["MEGA_EMAIL"]
+    MEGA_PASSWORD = config_dict["MEGA_PASSWORD"]
+
+    executor = AsyncExecutor()
+    api = MegaApi(None, None, None, "SEARCH-X")
+    folder_api = None
+
+    mega_listener = MegaAppListener(executor.continue_event, listener)
+    api.addListener(mega_listener)
+
+    if MEGA_EMAIL and MEGA_PASSWORD:
+        await executor.do(api.login, (MEGA_EMAIL, MEGA_PASSWORD))
+
+    if get_mega_link_type(mega_link) == "file":
+        await executor.do(api.getPublicNode, (mega_link,))
+        node = mega_listener.public_node
+    else:
+        folder_api = MegaApi(None, None, None, "SEARCH-X")
+        folder_api.addListener(mega_listener)
+        await executor.do(folder_api.loginToFolder, (mega_link,))
+        node = await sync_to_async(folder_api.authorizeNode, mega_listener.node)
+    
+    if mega_listener.error is not None:
+        await sendMessage(listener.message, str(mega_listener.error))
+        await executor.do(api.logout, ())
+        if folder_api is not None:
+            await executor.do(folder_api.logout, ())
+        return
+
+    name = name or node.getName()
+    msg, button = await stop_duplicate_check(name, listener)
+    if msg:
+        await sendMessage(listener.message, msg, button)
+        await executor.do(api.logout, ())
+        if folder_api is not None:
+            await executor.do(folder_api.logout, ())
+        return
+
+    gid = token_hex(5)
+    size = api.getSize(node)
+    if limit_exceeded := await limit_checker(size, listener, isMega=True):
+        await sendMessage(listener.message, limit_exceeded)
+        return
+    added_to_queue, event = await is_queued(listener.uid)
+    if added_to_queue:
+        LOGGER.info(f"Added to Queue/Download: {name}")
+        async with download_dict_lock:
+            download_dict[listener.uid] = QueueStatus(listener, size, gid, 'dl')
+        await listener.onDownloadStart()
+        await sendStatusMessage(listener.message)
+        await event.wait()
+        async with download_dict_lock:
+            if listener.uid not in download_dict:
+                await executor.do(api.logout, ())
+                if folder_api is not None:
+                    await executor.do(folder_api.logout, ())
                 return
-        elif is_rclone_path(self.link):
-            await add_rclone_download(self, path)
-        elif is_gdrive_link(self.link) or is_gdrive_id(self.link):
-            await add_gd_download(self, path)
-        elif self.isQbit:
-            await add_qb_torrent(self, path, ratio, seed_time)
-        else:
-            ussr, pssw = args['-au'], args['-ap']
-            if ussr or pssw:
-                auth = f'{ussr}:{pssw}'
-                headers += f" authorization: Basic {b64encode(auth.encode()).decode('ascii')}"
-            if 'static.romsget.io' in self.link:
-                headers = 'Referer: https://www.romsget.io/'
-            await add_aria2c_download(self, path, headers, ratio, seed_time)
+        from_queue = True
+        LOGGER.info(f"Start Queued Download from Mega: {name}")
+    else:
+        from_queue = False
 
+    async with download_dict_lock:
+        download_dict[listener.uid] = MegaDownloadStatus(
+            name, size, gid, mega_listener, listener.message
+        )
+    async with queue_dict_lock:
+        non_queued_dl.add(listener.uid)
 
-async def mirror(client: Client, message: Message):
-    Mirror(client, message).newEvent()
+    if from_queue:
+        LOGGER.info(f"Start Queued Download from Mega: {name}")
+    else:
+        await listener.onDownloadStart()
+        await sendStatusMessage(listener.message)
+        LOGGER.info(f"Download from Mega: {name}")
 
-
-async def qb_mirror(client: Client, message: Message):
-    Mirror(client, message, isQbit=True).newEvent()
-
-
-async def leech(client: Client, message: Message):
-    Mirror(client, message, isLeech=True).newEvent()
-
-
-async def qb_leech(client: Client, message: Message):
-    Mirror(client, message, isQbit=True, isLeech=True).newEvent()
-
-
-async def jd_mirror(client: Client, message: Message):
-    Mirror(client, message, isJd=True).newEvent()
-
-
-async def jd_leech(client: Client, message: Message):
-    Mirror(client, message, isLeech=True, isJd=True).newEvent()
-
-
-bot.add_handler(MessageHandler(mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_mirror, filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(leech, filters=command(BotCommands.LeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_leech, filters=command(BotCommands.QbLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(jd_mirror, filters=command(BotCommands.JdMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(jd_leech, filters=command(BotCommands.JdLeechCommand) & CustomFilters.authorized))
+    await makedirs(path, exist_ok=True)
+    await executor.do(api.startDownload, (node, path, name, None, False, None))
+    await executor.do(api.logout, ())
+    if folder_api is not None:
+        await executor.do(folder_api.logout, ())
