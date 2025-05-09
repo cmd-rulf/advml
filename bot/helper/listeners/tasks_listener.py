@@ -7,13 +7,12 @@ from random import choice
 from requests import utils as rutils
 from time import time
 
-
 from bot import bot_loop, bot_name, task_dict, task_dict_lock, Intervals, aria2, config_dict, non_queued_up, non_queued_dl, queued_up, queued_dl, queue_dict_lock, LOGGER, DATABASE_URL
 from bot.helper.common import TaskConfig
 from bot.helper.ext_utils.bot_utils import is_premium_user, UserDaily, default_button, sync_to_async
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.files_utils import get_path_size, clean_download, clean_target, join_files
-from bot.helper.ext_utils.links_utils import is_magnet, is_url, get_link, is_media, is_gdrive_link, get_stream_link, is_gdrive_id
+from bot.helper.ext_utils.links_utils import is_magnet, is_url, get_link, is_media, is_gdrive_link, get_stream_link, is_gdrive_id, is_mega_link
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.status_utils import action, get_date_time, get_readable_file_size, get_readable_time
 from bot.helper.ext_utils.task_manager import start_from_queued, check_running_tasks
@@ -30,7 +29,6 @@ from bot.helper.mirror_utils.upload_utils.telegram_uploader import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import limit, sendCustom, sendMedia, sendMessage, auto_delete_message, sendSticker, sendFile, copyMessage, sendingMessage, update_status_message, delete_status
 from bot.helper.video_utils.executor import VidEcxecutor
-
 
 class TaskListener(TaskConfig):
     def __init__(self):
@@ -239,8 +237,6 @@ class TaskListener(TaskConfig):
                         msg += f'<b>SubFolders: </b>{folders}\n'
                     msg += f'<b>Files: </b>{files}\n'
             msg += f'<b>Source Link:</b>\n<code>{get_link(self.message, get_source=True)}</code>'
-            # (f'<b>├ Add: </b>{dt_date}\n'
-         # f'<b>├ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n'
             if reply_to and is_media(reply_to):
                 await sendMedia(msg, chat_id, reply_to)
             else:
@@ -267,8 +263,6 @@ class TaskListener(TaskConfig):
             msg += (f'<b>Elapsed: </b>{get_readable_time(time() - self.message.date.timestamp())}\n'
                     f'<b>Cc: </b>{self.tag}\n'
                     f'<b>Action: </b>{action(self.message)}\n\n')
-                #    f'<b>├ Add: </b>{dt_date}\n'
-                #    f'<b>└ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n\n')
             ONCOMPLETE_LEECH_LOG = config_dict['ONCOMPLETE_LEECH_LOG']
             if not files:
                 uploadmsg = await sendingMessage(msg, self.message, images, buttons.build_menu(2))
@@ -331,8 +325,6 @@ class TaskListener(TaskConfig):
             msg += (f'<b>Elapsed: </b>{get_readable_time(time() - self.message.date.timestamp())}\n'
                     f'<b>Cc: </b>{self.tag}\n'
                     f'<b>Action: </b>{action(self.message)}\n')
-                  #  f'<b>├ Add: </b>{dt_date}\n'
-                  #  f'<b>└ At: </b>{dt_time} ({TIME_ZONE_TITLE})')
             if link or rclonePath:
                 if self.isGofile:
                     golink = await sync_to_async(short_url, self.isGofile, self.user_id)
@@ -461,8 +453,6 @@ class TaskListener(TaskConfig):
                     f'<b>Action: </b>{action(self.message)}\n'
                     f'<b>Status: </b>#undone\n'
                     f'<b>On: </b>{"#clone" if self.isClone else "#download"}\n'
-                  #  f'<b>├ Add: </b>{dt_date}\n'
-                  #  f'<b>├ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n'
                     f'<b>Source Link:</b>\n<code>{get_link(self.message, get_source=True)}</code>')
             if reply_to and is_media(reply_to):
                 await sendMedia(msg, chat_id, reply_to)
@@ -479,8 +469,6 @@ class TaskListener(TaskConfig):
         msg += (f'<b>Elapsed: </b>{get_readable_time(time() - self.message.date.timestamp())}\n'
                 f'<b>Cc:</b> {self.tag}\n'
                 f'<b>Action: </b>{action(self.message)}\n'
-            #    f'<b>├ Add: </b>{dt_date}\n'
-             #   f'<b>├ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n'
                 f'<b>Due to:</b> {err_msg}')
         if listfile:
             await sendFile(self.message, listfile, msg, config_dict['IMAGE_HTML'])
@@ -503,6 +491,11 @@ class TaskListener(TaskConfig):
                 non_queued_up.remove(self.mid)
 
         await gather(start_from_queued(), clean_download(self.dir), clean_download(self.newDir))
+
+        # Prevent reprocessing of failed Mega.nz links
+        if is_mega_link(self.message.text) or is_mega_link(get_link(self.message)):
+            LOGGER.info(f"Preventing reprocessing of failed Mega.nz link: {self.message.text}")
+            return
 
         if self.isSuperChat and (stime := config_dict['AUTO_DELETE_UPLOAD_MESSAGE_DURATION']):
             bot_loop.create_task(auto_delete_message(self.message, reply_to, stime=stime))
@@ -535,8 +528,6 @@ class TaskListener(TaskConfig):
                     f'<b>Status: </b>{"#done" if "Seeding" in error else "#undone"}\n'
                     f'<b>On: </b>{"#clone" if self.isClone else "#upload"}\n'
                     f'<b>Source Link:</b>\n<code>{get_link(self.message, get_source=True)}</code>')
-                             #   f'<b>├ Add: </b>{dt_date}\n'
-                 #   f'<b>├ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n'
             if reply_to and is_media(reply_to):
                 await sendMedia(msg, chat_id, reply_to)
             else:
@@ -553,8 +544,6 @@ class TaskListener(TaskConfig):
                 f'<b>Cc:</b> {self.tag}\n'
                 f'<b>Action: </b>{action(self.message)}\n'
                 f'<b>Due to:</b> {err_msg}')
-                     #   f'<b>├ Add: </b>{dt_date}\n'
-            #    f'<b>├ At: </b>{dt_time} ({TIME_ZONE_TITLE})\n'
         if self.isGofile:
             buttons.button_link('GoFile Link', self.isGofile)
             if config_dict['SAVE_MESSAGE'] and self.isSuperChat:

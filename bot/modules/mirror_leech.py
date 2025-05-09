@@ -24,12 +24,12 @@ from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
 from bot.helper.video_utils.selector import SelectMode
 from myjd.exception import MYJDException
-
 
 class Mirror(TaskListener):
     def __init__(self, client: Client, message: Message, isQbit=False, isJd=False, isLeech=False, vidMode=None, sameDir=None, bulk=None, multiTag=None, options=''):
@@ -157,6 +157,7 @@ class Mirror(TaskListener):
                 self.removeFromSameDir()
                 return
 
+        LOGGER.info(f"Running multi for link: {self.link}, multi: {self.multi}")
         self.run_multi(input_list, folder_name, Mirror)
 
         path = ospath.join(f'{config_dict["DOWNLOAD_DIR"]}{self.mid}', folder_name)
@@ -166,6 +167,8 @@ class Mirror(TaskListener):
         self.editable = await sendMessage('<i>Checking request, please wait...</i>', self.message)
         if self.link:
             await sleep(0.5)
+
+        LOGGER.info(f"Processing link: {self.link}, is_mega_link: {is_mega_link(self.link)}")
 
         if self.link and is_tele_link(self.link):
             try:
@@ -202,8 +205,6 @@ class Mirror(TaskListener):
         if not is_url(self.link) and not is_magnet(self.link) and not await aiopath.exists(self.link) and not is_rclone_path(self.link) and not is_gdrive_id(self.link) and not file_:
             await gather(editMessage(f'Where Are Links/Files, type /{BotCommands.HelpCommand} for more details.', self.editable), auto_delete_message(self.message, self.editable))
             self.removeFromSameDir()
-
-
             return
 
         if self.link:
@@ -222,6 +223,10 @@ class Mirror(TaskListener):
 
         if is_mega_link(self.link):
             self.isJd = False
+            LOGGER.info("Routing Mega.nz link to add_mega_download")
+            await add_mega_download(self, path)
+            await deleteMessage(self.editable)
+            return  # Ensure no further processing for Mega.nz links
 
         if is_magnet(self.link):
             self.isJd = False
@@ -234,6 +239,8 @@ class Mirror(TaskListener):
                 host = urlparse(self.link).netloc
                 await editMessage(f'<i>Generating direct link from {host}, please wait...</i>', self.editable)
                 try:
+                    if is_mega_link(self.link):  # Double-check to prevent direct_link_generator
+                        raise DirectDownloadLinkException("Mega.nz links should be handled by add_mega_download")
                     self.link = await sync_to_async(direct_link_generator, self.link)
                     LOGGER.info('Generated link: %s', self.link)
                     if isinstance(self.link, dict):
@@ -257,6 +264,7 @@ class Mirror(TaskListener):
                         await editMessage(f'{self.tag}, {e}', self.editable)
                         self.removeFromSameDir()
                         return
+
         if not self.isJd:
             await deleteMessage(self.editable)
 
@@ -275,8 +283,7 @@ class Mirror(TaskListener):
         elif is_rclone_path(self.link):
             await add_rclone_download(self, path)
         elif is_gdrive_link(self.link) or is_gdrive_id(self.link):
-            await add_gd_download(self, path)
-        
+            await add_gd_downloadνη, S. (2014). Interview. In T. Teo (Ed.), *Encyclopedia of Critical Psychology* (pp. 1008–1010). Springer. https://doi.org/10.1007/978-1-4614-5583-7_161(self, path)
         elif self.isQbit:
             await add_qb_torrent(self, path, ratio, seed_time)
         else:
@@ -286,32 +293,26 @@ class Mirror(TaskListener):
                 headers += f" authorization: Basic {b64encode(auth.encode()).decode('ascii')}"
             if 'static.romsget.io' in self.link:
                 headers = 'Referer: https://www.romsget.io/'
+            LOGGER.info("Routing to aria2c for non-specialized link")
             await add_aria2c_download(self, path, headers, ratio, seed_time)
-
 
 async def mirror(client: Client, message: Message):
     Mirror(client, message).newEvent()
 
-
 async def qb_mirror(client: Client, message: Message):
     Mirror(client, message, isQbit=True).newEvent()
-
 
 async def leech(client: Client, message: Message):
     Mirror(client, message, isLeech=True).newEvent()
 
-
 async def qb_leech(client: Client, message: Message):
     Mirror(client, message, isQbit=True, isLeech=True).newEvent()
-
 
 async def jd_mirror(client: Client, message: Message):
     Mirror(client, message, isJd=True).newEvent()
 
-
 async def jd_leech(client: Client, message: Message):
     Mirror(client, message, isLeech=True, isJd=True).newEvent()
-
 
 bot.add_handler(MessageHandler(mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_mirror, filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized))

@@ -7,13 +7,12 @@ from pyrogram.types import Message
 from re import search as re_search, compile as re_compile, escape
 from time import time
 
-from bot import bot, bot_loop, task_dict, task_dict_lock, user_data, config_dict, DATABASE_URL
+from bot import bot, bot_loop, task_dict, task_dict_lock, user_data, config_dict, DATABASE_URL, LOGGER
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.telegram_helper.button_build import ButtonMaker
-
+from bot.helper.ext_utils.links_utils import is_mega_link
 
 THREADPOOL = ThreadPoolExecutor(max_workers=1000)
-
 
 class setInterval:
     def __init__(self, interval, action, *args, **kwargs):
@@ -28,7 +27,6 @@ class setInterval:
 
     def cancel(self):
         self.task.cancel()
-
 
 class UserDaily:
     def __init__(self, user_id):
@@ -50,7 +48,6 @@ class UserDaily:
     async def _reset(self):
         await gather(update_user_ldata(self._user_id, 'daily_limit', 1), update_user_ldata(self._user_id, 'reset_limit', time() + 86400))
 
-
 def bt_selection_buttons(id_: int):
     gid = id_[:12] if len(id_) > 20 else id_
     pincode = ''.join([n for n in id_ if n.isdigit()][:4])
@@ -65,12 +62,10 @@ def bt_selection_buttons(id_: int):
     buttons.button_data('Cancel', f'btsel canc {gid} {id_}')
     return buttons.build_menu(2)
 
-
 async def get_user_task(user_id: int):
     async with task_dict_lock:
         uid_count = sum(task.listener.user_id == user_id for task in task_dict.values())
     return uid_count
-
 
 def presuf_remname_name(user_dict: int, name: str):
     if name:
@@ -91,11 +86,9 @@ def presuf_remname_name(user_dict: int, name: str):
 
     return name
 
-
 def is_premium_user(user_id: int):
     user_dict = user_data.get(user_id, {})
     return user_id == config_dict['OWNER_ID'] or (config_dict['PREMIUM_MODE'] and user_dict.get('is_premium')) or user_dict.get('is_sudo')
-
 
 async def default_button(message: Message):
     try:
@@ -107,7 +100,6 @@ async def default_button(message: Message):
 
     return message.reply_markup if getattr(message.reply_markup, 'inline_keyboard', None) else None
 
-
 def getSizeBytes(size):
     size = size.lower()
     unit_to_factor = {'mb': 1048576, 'gb': 1073741824}
@@ -117,14 +109,12 @@ def getSizeBytes(size):
             return int(size)
     return 0
 
-
 async def get_content_type(url):
     try:
         async with ClientSession() as session, session.get(url, allow_redirects=True, ssl=False) as response:
             return response.headers.get('Content-Type'), response.headers.get('Content-Length')
     except:
         return '', ''
-
 
 def arg_parser(items, arg_base):
     if not items:
@@ -160,12 +150,10 @@ def arg_parser(items, arg_base):
         arg_base['link'] = link
     return arg_base
 
-
 async def update_user_ldata(id_: int, key: str, value):
     user_data.setdefault(id_, {})[key] = value
     if DATABASE_URL and key not in ['thumb', 'rclone_config', 'token_pickle']:
         await DbManager().update_user_data(id_)
-
 
 async def retry_function(attempt, func, *args, **kwargs):
     while attempt < 5:
@@ -176,7 +164,6 @@ async def retry_function(attempt, func, *args, **kwargs):
             attempt += 1
     raise Exception(f'Failed to execute {func.__name__}, reached max total attempts {attempt}x!')
 
-
 async def cmd_exec(cmd, shell=False):
     if shell:
         proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
@@ -185,13 +172,11 @@ async def cmd_exec(cmd, shell=False):
     stdout, stderr = await proc.communicate()
     return stdout.decode().strip(), stderr.decode().strip(), proc.returncode
 
-
 def new_task(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         return bot_loop.create_task(func(*args, **kwargs))
     return wrapper
-
 
 async def sync_to_async(func, *args, wait=True, **kwargs):
     """Run sync function in async coroutine"""
@@ -199,12 +184,10 @@ async def sync_to_async(func, *args, wait=True, **kwargs):
     future = bot_loop.run_in_executor(THREADPOOL, pfunc)
     return await future if wait else future
 
-
 def async_to_sync(func, *args, wait=True, **kwargs):
     """Run Async function in sync"""
     future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
     return future.result() if wait else future
-
 
 def new_thread(func):
     @wraps(func)
@@ -212,3 +195,31 @@ def new_thread(func):
         future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
         return future.result() if wait else future
     return wrapper
+
+async def initBulk(input_list, bulk_start, bulk_end, obj):
+    try:
+        bulk_start = int(bulk_start)
+        bulk_end = int(bulk_end)
+    except:
+        return
+    LOGGER.info(f"Initializing bulk download: start={bulk_start}, end={bulk_end}")
+    for i in range(bulk_start, bulk_end + 1):
+        new_input_list = input_list.copy()
+        for j, part in enumerate(new_input_list):
+            if 'link' in arg_parser([part], {'link': ''}):
+                new_input_list[j] = part.format(i=i)
+                link = arg_parser([new_input_list[j]], {'link': ''})['link']
+                if is_mega_link(link):
+                    LOGGER.info(f"Skipping Mega.nz link in bulk: {link}")
+                    continue  # Skip Mega.nz links to avoid reprocessing
+                new_input_list[j] = new_input_list[j].replace('{i}', str(i))
+                break
+        new_message = ' '.join(new_input_list)
+        msg = await bot.send_message(chat_id=obj.message.chat.id, text=new_message, disable_web_page_preview=True)
+        msg = await bot.get_messages(obj.message.chat.id, msg.id)
+        if obj.message.from_user:
+            msg.from_user = obj.message.from_user
+        else:
+            msg.sender_chat = obj.message.sender_chat
+        new_obj = obj.__class__(obj.client, msg, obj.isQbit, obj.isJd, obj.isLeech, obj.vidMode, obj.sameDir, obj.bulk, obj.multiTag, obj.options)
+        new_obj.newEvent()
