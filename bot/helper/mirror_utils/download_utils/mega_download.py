@@ -178,16 +178,16 @@ async def add_mega_download(mega_link, path, listener, name):
     if limit_exceeded := await check_limits_size(listener, size):
         await sendMessage(listener.message, limit_exceeded)
         return
-    added_to_queue, event = await check_running_tasks(listener.uid)
+    added_to_queue, event = await check_running_tasks(listener.mid)
     if added_to_queue:
         LOGGER.info(f"Added to Queue/Download: {name}")
         async with task_dict_lock:
-            task_dict[listener.uid] = QueueStatus(listener, size, gid, 'dl')
+            task_dict[listener.mid] = QueueStatus(listener, size, gid, 'dl')
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
         await event.wait()
         async with task_dict_lock:
-            if listener.uid not in task_dict:
+            if listener.mid not in task_dict:
                 await executor.do(api.logout, ())
                 if folder_api is not None:
                     await executor.do(folder_api.logout, ())
@@ -198,11 +198,11 @@ async def add_mega_download(mega_link, path, listener, name):
         from_queue = False
 
     async with task_dict_lock:
-        task_dict[listener.uid] = MegaDownloadStatus(
+        task_dict[listener.mid] = MegaDownloadStatus(
             name, size, gid, mega_listener, listener.message
         )
     async with queue_dict_lock:
-        non_queued_dl.add(listener.uid)
+        non_queued_dl.add(listener.mid)
 
     if from_queue:
         LOGGER.info(f"Start Queued Download from Mega: {name}")
