@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-from mega import MegaApi
-
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
 
 
 class MegaDownloadStatus:
-
     def __init__(self, name, size, gid, obj, message):
         self.__obj = obj
         self.__name = name
@@ -34,8 +30,7 @@ class MegaDownloadStatus:
 
     def eta(self):
         try:
-            seconds = (self.__size - self.__obj.downloaded_bytes) / \
-                self.__obj.speed
+            seconds = (self.__size - self.__obj.downloaded_bytes) / self.__obj.speed
             return get_readable_time(seconds)
         except ZeroDivisionError:
             return '-'
@@ -51,3 +46,6 @@ class MegaDownloadStatus:
 
     def download(self):
         return self.__obj
+
+    async def cancel_download(self):
+        await self.__obj.cancel_download()
