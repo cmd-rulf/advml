@@ -8,9 +8,7 @@ from bot import bot_name, task_dict, task_dict_lock, botStartTime, config_dict
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
-
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-
 
 class MirrorStatus:
     STATUS_ARCHIVING = 'Archiving'
@@ -36,7 +34,6 @@ class MirrorStatus:
     STATUS_WAIT = 'Waiting'
     STATUS_WATERMARK = 'Watermarking'
 
-
 STATUS_VALUES = [('ALL', 'All'),
                  ('DL', MirrorStatus.STATUS_DOWNLOADING),
                  ('UP', MirrorStatus.STATUS_UPLOADING),
@@ -51,18 +48,15 @@ STATUS_VALUES = [('ALL', 'All'),
                  ('WM', MirrorStatus.STATUS_WATERMARK),
                  ('SD', MirrorStatus.STATUS_SEEDING)]
 
-
 async def getTaskByGid(gid: str):
     async with task_dict_lock:
         return next((tk for tk in task_dict.values() if tk.gid() == gid), None)
-
 
 async def getAllTasks(req_status: str):
     async with task_dict_lock:
         if req_status == 'all':
             return list(task_dict.values())
         return [tk for tk in task_dict.values() if tk.status() == req_status]
-
 
 def get_readable_file_size(size_in_bytes: int | str):
     if isinstance(size_in_bytes, str):
@@ -75,11 +69,9 @@ def get_readable_file_size(size_in_bytes: int | str):
         index += 1
     return f'{size_in_bytes:.2f}{SIZE_UNITS[index]}' if index > 0 else f'{size_in_bytes:.2f}B'
 
-
 def get_date_time(message: Message):
     dt = message.date.astimezone(timezone(config_dict['TIME_ZONE']))
     return dt.strftime('%B %d, %Y'), dt.strftime('%H:%M:%S')
-
 
 def get_readable_time(seconds):
     periods = [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]
@@ -89,7 +81,6 @@ def get_readable_time(seconds):
             period_value, seconds = divmod(seconds, period_seconds)
             result += f'{int(period_value)}{period_name} '
     return result.strip()
-
 
 def speed_string_to_bytes(size_text: str):
     size = 0
@@ -106,7 +97,6 @@ def speed_string_to_bytes(size_text: str):
         size += float(size_text.split('b')[0])
     return size
 
-
 def get_progress_bar_string(pct: str):
     pct = float(pct.strip('%'))
     p = min(max(pct, 0), 100)
@@ -118,13 +108,11 @@ def get_progress_bar_string(pct: str):
     p_str += '○' * (12 - cFull)
     return f"[{p_str}]"
 
-
 def action(message: Message):
     acts = message.text.split(maxsplit=1)[0]
     return acts.replace('/', '#').replace(f'@{bot_name}', '').replace(str(config_dict['CMD_SUFFIX']), '').lower()
 
-
-def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='All', page_step: int=1):
+def get_readable_message(sid: int, is_user: bool, page_no: int=1, status: str='All', page_step: int=1):
     msg = f'<a href="https://t.me/h_oneysingh"><b><i>Bot By Honey</b></i></a>\n\n'
     dl_speed = up_speed = 0
 
@@ -146,14 +134,14 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
     for index, task in enumerate(tasks[start_position:STATUS_LIMIT + start_position], start=1):
         tstatus = task.status()
         msg += f'<b>{index+start_position}.</b> <code>{escape(str(task.name())) or "N/A"}</code>'
-        if task.listener.isSuperChat:
+        if hasattr(task.listener, 'isSuperChat') and task.listener.isSuperChat:
             reply_to = task.listener.message.reply_to_message
             link = task.listener.message.link if not reply_to or getattr(reply_to.from_user, 'is_bot', None) else reply_to.link
             msg += f'\n\n<b>┌ <a href="{link}"><i>{tstatus}...</i></a></b>'
         else:
             msg += f'\n<b>┌ <i>{tstatus}...</i></b>'
         ext_msg = (f'\n<b>├ Engine:<i> {task.engine()}</i></b>'
-                   f'\n<b>├ By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.isSuperChat else ''
+                   f'\n<b>├ By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if hasattr(task.listener, 'isSuperChat') and task.listener.isSuperChat else ''
                    f'\n<b>├ Action:</b> {action(task.listener.message)}')
         if tstatus not in [MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_METADATA, MirrorStatus.STATUS_SUBSYNC]:
             msg += (f'\n<b>├ </b>{get_progress_bar_string(task.progress())}'

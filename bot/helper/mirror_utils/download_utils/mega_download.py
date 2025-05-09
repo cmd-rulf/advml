@@ -24,7 +24,6 @@ from bot.helper.ext_utils.task_manager import (
 from aiofiles.os import makedirs
 from secrets import token_hex
 
-
 class MegaAppListener(MegaListener):
     _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN, MegaRequest.TYPE_FETCH_NODES)
     NO_ERROR = "no error"
@@ -39,6 +38,7 @@ class MegaAppListener(MegaListener):
         self.__bytes_transferred = 0
         self.__speed = 0
         self.__name = ""
+
         super().__init__()
 
     @property
@@ -123,7 +123,6 @@ class MegaAppListener(MegaListener):
         self.is_cancelled = True
         await self.listener.onDownloadError("Download Canceled by user")
 
-
 class AsyncExecutor:
     def __init__(self):
         self.continue_event = Event()
@@ -132,7 +131,6 @@ class AsyncExecutor:
         self.continue_event.clear()
         await sync_to_async(function, *args)
         await self.continue_event.wait()
-
 
 async def add_mega_download(mega_link, path, listener, name):
     MEGA_EMAIL = config_dict["MEGA_EMAIL"]
@@ -199,7 +197,7 @@ async def add_mega_download(mega_link, path, listener, name):
 
     async with task_dict_lock:
         task_dict[listener.mid] = MegaDownloadStatus(
-            name, size, gid, mega_listener, listener.message
+            name, size, gid, mega_listener, listener
         )
     async with queue_dict_lock:
         non_queued_dl.add(listener.mid)

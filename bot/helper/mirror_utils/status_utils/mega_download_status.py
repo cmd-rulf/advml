@@ -1,5 +1,4 @@
-from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStatus, get_readable_time
-
+from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 class MegaDownloadStatus:
     def __init__(self, name, size, gid, mega_listener, listener):
@@ -8,7 +7,7 @@ class MegaDownloadStatus:
         self.__gid = gid
         self.__mega_listener = mega_listener
         self.__listener = listener  # Store the full listener object
-        self.message = listener.message  # Retain message for compatibility
+        self.message = listener.message  # Store the Pyrogram Message object
 
     def name(self):
         return self.__name
