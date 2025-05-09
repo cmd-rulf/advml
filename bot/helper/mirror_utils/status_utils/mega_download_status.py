@@ -1,3 +1,4 @@
+from time import time
 from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 class MegaDownloadStatus:
@@ -8,6 +9,7 @@ class MegaDownloadStatus:
         self.__mega_listener = mega_listener
         self.__listener = listener  # Store the full listener object
         self.message = listener.message  # Store the Pyrogram Message object
+        self.__start_time = time()  # Record the start time of the download
 
     def name(self):
         return self.__name
@@ -34,6 +36,9 @@ class MegaDownloadStatus:
         return get_readable_time(
             (self.__size - self.__mega_listener.downloaded_bytes) / self.__mega_listener.speed
         ) if self.__mega_listener.speed else "~"
+
+    def elapsed(self):
+        return get_readable_time(time() - self.__start_time)  # Calculate elapsed time
 
     def engine(self):
         return "Mega"
