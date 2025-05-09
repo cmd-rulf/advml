@@ -26,7 +26,7 @@ from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_do
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
 from bot.helper.listeners.mega_listener import add_mega_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.filtersV2 import CustomFilters
+from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
 from bot.helper.video_utils.selector import SelectMode
 from myjd.exception import MYJDException
@@ -309,6 +309,6 @@ async def jd_leech(client: Client, message: Message):
 bot.add_handler(MessageHandler(mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_mirror, filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(leech, filters=command(BotCommands.LeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_leech, filters=command(BotCommands.QbLeechCommand) & CustomFilters.authorized
+bot.add_handler(MessageHandler(qb_leech, filters=command(BotCommands.QbLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(jd_mirror, filters=command(BotCommands.JdMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(jd_leech, filters=command(BotCommands.JdLeechCommand) & CustomFilters.authorized))
