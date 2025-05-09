@@ -18,7 +18,6 @@ gunicorn
 httpx
 html_telegraph_poster
 lxml
-mega
 motor
 natsort
 pillow
