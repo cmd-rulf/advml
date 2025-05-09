@@ -167,6 +167,8 @@ class Mirror(TaskListener):
         if self.link:
             await sleep(0.5)
 
+        LOGGER.info(f"Processing link: {self.link}, is_mega_link: {is_mega_link(self.link)}")
+
         if self.link and is_tele_link(self.link):
             try:
                 await intialize_savebot(self.user_dict.get('session_string'), True, self.user_id)
@@ -234,8 +236,6 @@ class Mirror(TaskListener):
                 host = urlparse(self.link).netloc
                 await editMessage(f'<i>Generating direct link from {host}, please wait...</i>', self.editable)
                 try:
-                    if is_mega_link(self.link):  # Double-check to prevent direct_link_generator
-                        raise DirectDownloadLinkException("Mega.nz links should be handled by add_mega_download")
                     self.link = await sync_to_async(direct_link_generator, self.link)
                     LOGGER.info('Generated link: %s', self.link)
                     if isinstance(self.link, dict):
