@@ -24,12 +24,13 @@ from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
-from bot.helper.listeners.mega_listener import add_mega_download
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download  # Added Mega import
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
 from bot.helper.video_utils.selector import SelectMode
 from myjd.exception import MYJDException
+
 
 class Mirror(TaskListener):
     def __init__(self, client: Client, message: Message, isQbit=False, isJd=False, isLeech=False, vidMode=None, sameDir=None, bulk=None, multiTag=None, options=''):
@@ -218,10 +219,12 @@ class Mirror(TaskListener):
             self.removeFromSameDir()
             return
 
+        # Mega link handling
         if is_mega_link(self.link):
             self.isJd = False
-            LOGGER.info("Routing Mega.nz link to add_mega_download")
-            await add_mega_download(self, path)
+            self.isQbit = False
+            await deleteMessage(self.editable)
+            await add_mega_download(self.link, f'{path}/', self, self.name)
             return
 
         if is_magnet(self.link):
@@ -288,23 +291,30 @@ class Mirror(TaskListener):
                 headers = 'Referer: https://www.romsget.io/'
             await add_aria2c_download(self, path, headers, ratio, seed_time)
 
+
 async def mirror(client: Client, message: Message):
     Mirror(client, message).newEvent()
+
 
 async def qb_mirror(client: Client, message: Message):
     Mirror(client, message, isQbit=True).newEvent()
 
+
 async def leech(client: Client, message: Message):
     Mirror(client, message, isLeech=True).newEvent()
+
 
 async def qb_leech(client: Client, message: Message):
     Mirror(client, message, isQbit=True, isLeech=True).newEvent()
 
+
 async def jd_mirror(client: Client, message: Message):
     Mirror(client, message, isJd=True).newEvent()
 
+
 async def jd_leech(client: Client, message: Message):
     Mirror(client, message, isLeech=True, isJd=True).newEvent()
+
 
 bot.add_handler(MessageHandler(mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_mirror, filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized))
