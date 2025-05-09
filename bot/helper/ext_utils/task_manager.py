@@ -9,11 +9,10 @@ from bot.helper.ext_utils.links_utils import is_gdrive_id, is_mega_link
 from bot.helper.mirror_utils.gdrive_utlis.search import gdSearch
 
 
-async def stop_duplicate_check(listener):
+async def stop_duplicate_check(name, listener):
     if (isinstance(listener.upDest, int) or listener.isLeech or listener.select or listener.sameDir
         or not is_gdrive_id(listener.upDest) or not listener.stopDuplicate):
         return None, ''
-    name = listener.name
     LOGGER.info('Checking File/Folder if already in Drive: %s', name)
     if listener.compress:
         name = f'{name}.zip'
@@ -30,8 +29,7 @@ async def stop_duplicate_check(listener):
             return file, name
     LOGGER.info('Checking duplicate is passed...')
     return None, ''
-
-
+    
 async def check_limits_size(listener, size, playlist=False, play_count=False):
     msgerr = None
     max_pyt, megadl, torddl, zuzdl, leechdl, storage = (config_dict['MAX_YTPLAYLIST'], config_dict['MEGA_LIMIT'], config_dict['TORRENT_DIRECT_LIMIT'],
