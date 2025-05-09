@@ -24,7 +24,7 @@ from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
-from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download  # Added Mega import
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
@@ -219,7 +219,6 @@ class Mirror(TaskListener):
             self.removeFromSameDir()
             return
 
-        # Mega link handling
         if is_mega_link(self.link):
             self.isJd = False
             self.isQbit = False
