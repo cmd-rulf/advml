@@ -2,50 +2,42 @@ from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStat
 
 
 class MegaDownloadStatus:
-    def __init__(self, name, size, gid, obj, message):
-        self._obj = obj
-        self._name = name
-        self._size = size
-        self._gid = gid
-        self.message = message
-        self.engine = 'Mega Sdk'
+    def __init__(self, name, size, gid, mega_listener, listener):
+        self.__name = name
+        self.__size = size
+        self.__gid = gid
+        self.__mega_listener = mega_listener
+        self.__listener = listener  # Store the full listener object
+        self.message = listener.message  # Retain message for compatibility
 
     def name(self):
-        return self._name
+        return self.__name
 
-    def progress_raw(self):
-        try:
-            return round(self._obj.downloaded_bytes / self._size * 100, 2)
-        except:
-            return 0.0
+    def size(self):
+        return get_readable_file_size(self.__size)
 
-    def progress(self):
-        return f'{self.progress_raw()}%'
+    def gid(self):
+        return self.__gid
 
     def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
 
+    def progress(self):
+        return f"{round(self.__mega_listener.downloaded_bytes / self.__size * 100, 2)}%"
+
     def processed_bytes(self):
-        return get_readable_file_size(self._obj.downloaded_bytes)
-
-    def eta(self):
-        try:
-            seconds = (self._size - self._obj.downloaded_bytes) / self._obj.speed
-            return get_readable_time(seconds)
-        except ZeroDivisionError:
-            return '-'
-
-    def size(self):
-        return get_readable_file_size(self._size)
+        return get_readable_file_size(self.__mega_listener.downloaded_bytes)
 
     def speed(self):
-        return f'{get_readable_file_size(self._obj.speed)}/s'
+        return f"{get_readable_file_size(self.__mega_listener.speed)}/s"
 
-    def gid(self):
-        return self._gid
+    def eta(self):
+        return get_readable_time(
+            (self.__size - self.__mega_listener.downloaded_bytes) / self.__mega_listener.speed
+        ) if self.__mega_listener.speed else "~"
 
-    def download(self):
-        return self._obj
+    def engine(self):
+        return "Mega"
 
-    async def cancel_download(self):
-        await self._obj.cancel_download()
+    def listener(self):
+        return self.__listener  # Provide access to the listener object
