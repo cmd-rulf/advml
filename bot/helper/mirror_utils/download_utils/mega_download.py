@@ -175,7 +175,7 @@ async def add_mega_download(mega_link, path, listener, name):
 
     gid = token_hex(5)
     size = api.getSize(node)
-    if limit_exceeded := await check_limits_size(size, listener, isMega=True):
+    if limit_exceeded := await check_limits_size(size, listener, megadl=True):
         await sendMessage(listener.message, limit_exceeded)
         return
     added_to_queue, event = await check_running_tasks(listener.uid)
