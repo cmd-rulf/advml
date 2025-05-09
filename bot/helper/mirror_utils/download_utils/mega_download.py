@@ -165,7 +165,7 @@ async def add_mega_download(mega_link, path, listener, name):
         return
 
     name = name or node.getName()
-    msg, button = await stop_duplicate_check(name)
+    msg, button = await stop_duplicate_check(name, listener)
     if msg:
         await sendMessage(listener.message, msg, button)
         await executor.do(api.logout, ())
