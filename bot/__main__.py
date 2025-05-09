@@ -27,12 +27,12 @@ from bot.helper.ext_utils.jdownloader_booter import jdownloader
 from bot.helper.ext_utils.links_utils import is_media
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time, get_progress_bar_string
-from bot.helper.ext_utils.telegraph_helper import telegraph, TelePost
+from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.listeners.aria2_listener import start_aria2_listener
 from bot.helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
 from bot.helper.stream_utils.file_properties import gen_link
 from bot.helper.stream_utils.web_services import start_server, server
-from bot.helper.telegram_helper.bot_commands import BotCommands, BotTheme
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import limit, sendMessage, editMessage, sendFile, auto_delete_message, sendingMessage, deleteMessage, editMarkup, editPhoto, sendCustom, editCustom, copyMessage
@@ -206,13 +206,7 @@ async def ping(_, message: Message):
 
 @new_task
 async def log(_, message: Message):
-    buttons = ButtonMaker()
-    buttons.ibutton(
-        BotTheme("LOG_DISPLAY_BT"), f"bot1 {message.from_user.id} logdisplay"
-    )
-    buttons.ibutton(BotTheme("WEB_PASTE_BT"), f"bot1 {message.from_user.id} webpaste")
-    msg = await sendFile(message, "log.txt", buttons=buttons.build_menu(1))
-    await auto_delete_message(message, msg)
+    await gather(sendFile(message, 'log.txt', thumb=config_dict['IMAGE_LOGS']), auto_delete_message(message))
 
 
 async def help_query(_, query: CallbackQuery):
@@ -230,29 +224,6 @@ async def help_query(_, query: CallbackQuery):
             await editPhoto(text, message, image, buttons)
         else:
             await editMessage(text, message, buttons)
-
-
-async def log_query(_, query: CallbackQuery):
-    data = query.data.split()
-    message = query.message
-    if int(data[1]) != query.from_user.id:
-        await query.answer('Not Yours!', True)
-        return
-    if data[2] == 'logdisplay':
-        await query.answer('Displaying log file...', show_alert=True)
-        async with aiopen('log.txt', 'r') as f:
-            log_content = await f.read()
-        await sendMessage(log_content[:4096], message)  # Telegram message limit
-    elif data[2] == 'webpaste':
-        await query.answer('Uploading to web paste...', show_alert=True)
-        async with aiopen('log.txt', 'r') as f:
-            log_content = await f.read()
-        telepost = TelePost(title="Log File")
-        paste_url = telepost.create_post(log_content)
-        if paste_url:
-            await sendMessage(f'Log uploaded to: {paste_url}', message)
-        else:
-            await sendMessage('Failed to upload log to web paste!', message)
 
 
 async def bot_help(_, message: Message):
@@ -363,7 +334,6 @@ async def main():
     bot.add_handler(MessageHandler(bot_help, filters=command(BotCommands.HelpCommand) & CustomFilters.authorized))
     bot.add_handler(MessageHandler(stats, filters=command(BotCommands.StatsCommand) & CustomFilters.authorized))
     bot.add_handler(CallbackQueryHandler(help_query, filters=regex('help')))
-    bot.add_handler(CallbackQueryHandler(log_query, filters=regex('bot1')))
     bot.add_handler(MessageHandler(new_member, filters=new_chat_members))
     bot.add_handler(MessageHandler(leave_member, filters=left_chat_member))
     await gather(set_command(),
@@ -381,3 +351,4 @@ async def main():
 
 
 bot_loop.run_until_complete(main())
+bot_loop.run_forever()
