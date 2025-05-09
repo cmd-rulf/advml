@@ -17,8 +17,8 @@ from bot.helper.ext_utils.bot_utils import (
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.ext_utils.task_manager import (
-    is_queued,
-    limit_checker,
+    check_running_tasks,
+    check_limits_size,
     stop_duplicate_check,
 )
 from aiofiles.os import makedirs
@@ -175,10 +175,10 @@ async def add_mega_download(mega_link, path, listener, name):
 
     gid = token_hex(5)
     size = api.getSize(node)
-    if limit_exceeded := await limit_checker(size, listener, isMega=True):
+    if limit_exceeded := await check_limits_size(size, listener, isMega=True):
         await sendMessage(listener.message, limit_exceeded)
         return
-    added_to_queue, event = await is_queued(listener.uid)
+    added_to_queue, event = await check_running_tasks(listener.uid)
     if added_to_queue:
         LOGGER.info(f"Added to Queue/Download: {name}")
         async with task_dict_lock:
