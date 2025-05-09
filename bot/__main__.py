@@ -381,4 +381,3 @@ async def main():
 
 
 bot_loop.run_until_complete(main())
-bot_loop.run_forever()
