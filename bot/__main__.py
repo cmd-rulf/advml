@@ -206,7 +206,12 @@ async def ping(_, message: Message):
 
 @new_task
 async def log(_, message: Message):
-    await gather(sendFile(message, 'log.txt', thumb=config_dict['IMAGE_LOGS']), auto_delete_message(message))
+    buttons = ButtonMaker()
+    buttons.ibutton(
+        BotTheme("LOG_DISPLAY_BT"), f"bot1 {message.from_user.id} logdisplay"
+    )
+    buttons.ibutton(BotTheme("WEB_PASTE_BT"), f"bot1 {message.from_user.id} webpaste")
+    await sendFile(message, "log.txt", buttons=buttons.build_menu(1))
 
 
 async def help_query(_, query: CallbackQuery):
