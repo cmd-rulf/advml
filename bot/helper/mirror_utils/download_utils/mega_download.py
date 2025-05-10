@@ -6,10 +6,8 @@ from bot import (
     task_dict_lock,
     task_dict,
     non_queued_dl,
-    non_queued_up,
     queue_dict_lock,
 )
-from bot.helper.ext_utils.status_utils import MirrorStatus
 from bot.helper.ext_utils.links_utils import get_mega_link_type
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import (
@@ -22,11 +20,9 @@ from bot.helper.ext_utils.task_manager import (
     check_running_tasks,
     check_limits_size,
     stop_duplicate_check,
-    start_up_from_queued,
 )
 from aiofiles.os import makedirs
 from secrets import token_hex
-from os import path as ospath
 
 class MegaAppListener(MegaListener):
     _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN, MegaRequest.TYPE_FETCH_NODES)
@@ -209,7 +205,7 @@ async def add_mega_download(mega_link, path, listener, name):
         # Add task to task dictionary
         async with task_dict_lock:
             task_dict[listener.mid] = MegaDownloadStatus(
-                name, size, gid, mega_listener, listener, path
+                name, size, gid, mega_listener, listener
             )
         async with queue_dict_lock:
             non_queued_dl.add(listener.mid)
@@ -232,16 +228,7 @@ async def add_mega_download(mega_link, path, listener, name):
         elif mega_listener.is_cancelled:
             await listener.onDownloadError("Download Canceled by user")
         else:
-            # Update task status to uploading
-            async with task_dict_lock:
-                if listener.mid in task_dict:
-                    task_dict[listener.mid].set_upload_phase()
-                    async with queue_dict_lock:
-                        non_queued_dl.discard(listener.mid)
-                        non_queued_up.add(listener.mid)
             await listener.onDownloadComplete()
-            LOGGER.info(f"Mega download completed, initiating upload for {name}")
-            await start_up_from_queued(listener.mid)  # Trigger upload queue processing
 
     except Exception as e:
         LOGGER.error(f"Error in add_mega_download: {e}")
@@ -254,6 +241,3 @@ async def add_mega_download(mega_link, path, listener, name):
                 await executor.do(folder_api.logout, ())
         except Exception as e:
             LOGGER.error(f"Failed to logout: {e}")
-        # Remove from download queue
-        async with queue_dict_lock:
-            non_queued_dl.discard(listener.mid)
