@@ -24,6 +24,7 @@ from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
@@ -202,8 +203,6 @@ class Mirror(TaskListener):
         if not is_url(self.link) and not is_magnet(self.link) and not await aiopath.exists(self.link) and not is_rclone_path(self.link) and not is_gdrive_id(self.link) and not file_:
             await gather(editMessage(f'Where Are Links/Files, type /{BotCommands.HelpCommand} for more details.', self.editable), auto_delete_message(self.message, self.editable))
             self.removeFromSameDir()
-
-
             return
 
         if self.link:
@@ -222,6 +221,7 @@ class Mirror(TaskListener):
 
         if is_mega_link(self.link):
             self.isJd = False
+            self.isQbit = False
 
         if is_magnet(self.link):
             self.isJd = False
@@ -257,13 +257,15 @@ class Mirror(TaskListener):
                         await editMessage(f'{self.tag}, {e}', self.editable)
                         self.removeFromSameDir()
                         return
-        if not self.isJd:
+        if not self.isJd and not is_mega_link(self.link):
             await deleteMessage(self.editable)
 
         if file_:
             await TelegramDownloadHelper(self).add_download(reply_to, path)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
+        elif is_mega_link(self.link):
+            await add_mega_download(self.link, path, self, self.name)
         elif self.isJd:
             try:
                 await add_jd_download(self, f'{path}/')
@@ -276,7 +278,6 @@ class Mirror(TaskListener):
             await add_rclone_download(self, path)
         elif is_gdrive_link(self.link) or is_gdrive_id(self.link):
             await add_gd_download(self, path)
-        
         elif self.isQbit:
             await add_qb_torrent(self, path, ratio, seed_time)
         else:
