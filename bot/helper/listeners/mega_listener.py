@@ -280,10 +280,6 @@ class MegaAppListener(MegaListener):
                 self.is_cancelled = True
                 self.continue_event.set()
 
-    async def cancel_task(self):
-        self.is_cancelled = True
-        await self.listener.on_download_error("Download Canceled by user")
-
     async def _retry_transfer(self, error_message, max_retries=3, retry_delay=5):
         """Retries the transfer with exponential backoff."""
         if self._transfer is None:

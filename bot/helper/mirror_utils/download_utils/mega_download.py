@@ -119,6 +119,10 @@ class MegaAppListener(MegaListener):
             )
             self.continue_event.set()
 
+    async def cancel_task(self):
+        self.is_cancelled = True
+        await self.listener.onDownloadError("Download Cancelled by user")
+
 class AsyncExecutor:
     def __init__(self):
         self.continue_event = Event()
