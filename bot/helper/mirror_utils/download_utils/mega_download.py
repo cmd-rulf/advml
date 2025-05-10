@@ -38,6 +38,7 @@ class MegaAppListener(MegaListener):
         self.__bytes_transferred = 0
         self.__speed = 0
         self.__name = ""
+        self.__completed = False
         super().__init__()
 
     @property
@@ -73,17 +74,16 @@ class MegaAppListener(MegaListener):
             self.continue_event.set()
 
     def onRequestTemporaryError(self, api, request, error: MegaError):
+        if self.is_cancelled or self.__completed:
+            return
         LOGGER.error(f"Mega Request error in {error}")
-        if not self.is_cancelled:
-            self.is_cancelled = True
-            async_to_sync(
-                self.listener.onDownloadError, f"RequestTempError: {error.toString()}"
-            )
-        self.error = error.toString()
+        self.is_cancelled = True
+        self.error = f"RequestTempError: {error.toString()}"
+        async_to_sync(self.listener.onDownloadError, self.error)
         self.continue_event.set()
 
     def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
-        if self.is_cancelled:
+        if self.is_cancelled or self.__completed:
             api.cancelTransfer(transfer, None)
             self.continue_event.set()
             return
@@ -91,12 +91,13 @@ class MegaAppListener(MegaListener):
         self.__bytes_transferred = transfer.getTransferredBytes()
 
     def onTransferFinish(self, api: MegaApi, transfer: MegaTransfer, error):
+        if self.is_cancelled or self.__completed:
+            return
         try:
-            if self.is_cancelled:
-                self.continue_event.set()
-            elif transfer.isFinished() and (
+            if transfer.isFinished() and (
                 transfer.isFolderTransfer() or transfer.getFileName() == self.__name
             ):
+                self.__completed = True
                 async_to_sync(self.listener.onDownloadComplete)
                 self.continue_event.set()
         except Exception as e:
@@ -105,23 +106,25 @@ class MegaAppListener(MegaListener):
             self.continue_event.set()
 
     def onTransferTemporaryError(self, api, transfer, error):
+        if self.is_cancelled or self.__completed:
+            return
         filen = transfer.getFileName()
         state = transfer.getState()
         errStr = error.toString()
         LOGGER.error(f"Mega download error in file {transfer} {filen}: {error}")
         if state in [1, 4]:
             return
-        self.error = errStr
-        if not self.is_cancelled:
-            self.is_cancelled = True
-            async_to_sync(
-                self.listener.onDownloadError, f"TransferTempError: {errStr} ({filen})"
-            )
-            self.continue_event.set()
+        self.error = f"TransferTempError: {errStr} ({filen})"
+        self.is_cancelled = True
+        async_to_sync(self.listener.onDownloadError, self.error)
+        self.continue_event.set()
 
     async def cancel_task(self):
+        if self.is_cancelled or self.__completed:
+            return
         self.is_cancelled = True
-        await self.listener.onDownloadError("Download Canceled by user")
+        self.error = "Download Canceled by user"
+        await self.listener.onDownloadError(self.error)
 
 class AsyncExecutor:
     def __init__(self):
@@ -223,11 +226,11 @@ async def add_mega_download(mega_link, path, listener, name):
         await executor.continue_event.wait()
 
         # Handle results
+        if mega_listener.is_cancelled:
+            return  # Cancellation handled in MegaAppListener.cancel_task
         if mega_listener.error:
             await listener.onDownloadError(str(mega_listener.error))
-        elif mega_listener.is_cancelled:
-            await listener.onDownloadError("Download Canceled by user")
-        else:
+        elif mega_listener.__completed:
             await listener.onDownloadComplete()
 
     except Exception as e:
