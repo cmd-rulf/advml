@@ -219,9 +219,10 @@ async def add_mega_download(mega_link, path, listener, name):
         await executor.continue_event.wait()
 
         # Handle results
-        if mega_listener.error:
+        if mega_listener.error and not mega_listener.is_cancelled:
             await listener.onDownloadError(str(mega_listener.error))
-        elif mega_listener.is_cancelled:
+        elif mega_listener.is_cancelled and not hasattr(mega_listener, 'error_reported'):
+            mega_listener.error_reported = True
             await listener.onDownloadError("Download Canceled by user")
         else:
             await listener.onDownloadComplete()
