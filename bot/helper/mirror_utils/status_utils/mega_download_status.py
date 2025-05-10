@@ -67,4 +67,5 @@ class MegaDownloadStatus:
         return self
 
     async def cancel_task(self):
+        LOGGER.info(f"Cancelling Mega Download: {self.__name}")
         await self.__mega_listener.cancel_task()
