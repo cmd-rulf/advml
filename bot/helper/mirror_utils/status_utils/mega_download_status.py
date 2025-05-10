@@ -65,3 +65,6 @@ class MegaDownloadStatus:
 
     def task(self):
         return self
+
+    async def cancel_task(self):
+        await self.__mega_listener.cancel_task()
