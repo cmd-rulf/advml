@@ -8,8 +8,8 @@ from bot import (
     non_queued_dl,
     non_queued_up,
     queue_dict_lock,
-    MirrorStatus,
 )
+from bot.helper.ext_utils.status_utils import MirrorStatus
 from bot.helper.ext_utils.links_utils import get_mega_link_type
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import (
