@@ -21,10 +21,10 @@ from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
 from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
-from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, editMessage, get_tg_link_message
@@ -222,11 +222,12 @@ class Mirror(TaskListener):
         if is_mega_link(self.link):
             self.isJd = False
             self.isQbit = False
-            await add_mega_download(self.link, path, self, self.name)
-        elif is_magnet(self.link):
+
+        if is_magnet(self.link):
             self.isJd = False
-        elif (not self.isJd and not self.isQbit and not is_magnet(self.link) and not is_rclone_path(self.link) and
-              not is_gdrive_link(self.link) and not self.link.endswith('.torrent') and not is_gdrive_id(self.link) and not file_):
+
+        if (not self.isJd and not self.isQbit and not is_magnet(self.link) and not is_rclone_path(self.link) and
+            not is_gdrive_link(self.link) and not self.link.endswith('.torrent') and not is_gdrive_id(self.link) and not file_):
             self.isSharer = is_sharer_link(self.link)
             content_type = (await get_content_type(self.link))[0]
             if not content_type or re_match(r'text/html|text/plain', content_type):
@@ -256,13 +257,16 @@ class Mirror(TaskListener):
                         await editMessage(f'{self.tag}, {e}', self.editable)
                         self.removeFromSameDir()
                         return
-        elif self.isJd:
+        if not self.isJd and not is_mega_link(self.link):
             await deleteMessage(self.editable)
 
         if file_:
             await TelegramDownloadHelper(self).add_download(reply_to, path)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
+        elif is_mega_link(self.link):
+            await add_mega_download(self.link, path, self, self.name)
+            await deleteMessage(self.editable)
         elif self.isJd:
             try:
                 await add_jd_download(self, f'{path}/')
