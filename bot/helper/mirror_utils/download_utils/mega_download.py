@@ -40,7 +40,7 @@ class MegaAppListener(MegaListener):
 
     @property
     def speed(self):
-        return Rendering Grok 3 output...self.__speed
+        return self.__speed
 
     @property
     def downloaded_bytes(self):
