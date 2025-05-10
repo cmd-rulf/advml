@@ -8,9 +8,9 @@ class MegaDownloadStatus:
         self.__size = size
         self.__gid = gid
         self.__mega_listener = mega_listener
-        self.__listener = listener  # Store the full listener object
-        self.message = listener.message  # Store the Pyrogram Message object
-        self.__start_time = time()  # Record the start time of the download
+        self.__listener = listener
+        self.message = listener.message
+        self.__start_time = time()
 
     def name(self):
         return self.__name
@@ -46,7 +46,7 @@ class MegaDownloadStatus:
             LOGGER.debug(f"Mega ETA - Remaining: {remaining_bytes} bytes, Speed: {speed} bytes/s")
             if speed > 0 and remaining_bytes > 0:
                 eta_seconds = remaining_bytes / speed
-                if eta_seconds < 86400:  # Cap ETA at 1 day to avoid unrealistic values
+                if eta_seconds < 86400:
                     return get_readable_time(eta_seconds)
             return "~"
         except Exception as e:
@@ -54,14 +54,14 @@ class MegaDownloadStatus:
             return "~"
 
     def elapsed(self):
-        return get_readable_time(time() - self.__start_time)  # Calculate elapsed time
+        return get_readable_time(time() - self.__start_time)
 
     def engine(self):
         return "Mega"
 
     @property
     def listener(self):
-        return self.__listener  # Provide access to the listener object as a property
+        return self.__listener
 
     def task(self):
         return self

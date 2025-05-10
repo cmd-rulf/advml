@@ -10,10 +10,7 @@ from bot import (
 )
 from bot.helper.ext_utils.links_utils import get_mega_link_type
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import (
-    async_to_sync,
-    sync_to_async,
-)
+from bot.helper.ext_utils.bot_utils import async_to_sync, sync_to_async
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.ext_utils.task_manager import (
@@ -35,6 +32,7 @@ class MegaAppListener(MegaListener):
         self.listener = listener
         self.is_cancelled = False
         self.error = None
+        self.error_reported = False  # New flag to prevent duplicate error reporting
         self.__bytes_transferred = 0
         self.__speed = 0
         self.__name = ""
@@ -42,7 +40,7 @@ class MegaAppListener(MegaListener):
 
     @property
     def speed(self):
-        return self.__speed
+        return Rendering Grok 3 output...self.__speed
 
     @property
     def downloaded_bytes(self):
@@ -76,9 +74,10 @@ class MegaAppListener(MegaListener):
         LOGGER.error(f"Mega Request error in {error}")
         self.is_cancelled = True
         self.error = f"RequestTempError: {error.toString()}"
-        async_to_sync(self.listener.onDownloadError, self.error)
+        if not self.error_reported:
+            self.error_reported = True
+            async_to_sync(self.listener.onDownloadError, self.error)
         self.continue_event.set()
-
 
     def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
         if self.is_cancelled:
@@ -100,6 +99,9 @@ class MegaAppListener(MegaListener):
         except Exception as e:
             LOGGER.error(e)
             self.error = str(e)
+            if not self.error_reported:
+                self.error_reported = True
+                async_to_sync(self.listener.onDownloadError, self.error)
             self.continue_event.set()
 
     def onTransferTemporaryError(self, api, transfer, error):
@@ -111,13 +113,19 @@ class MegaAppListener(MegaListener):
             return
         self.error = f"TransferTempError: {errStr} ({filen})"
         self.is_cancelled = True
-        async_to_sync(self.listener.onDownloadError, self.error)
+        if not self.error_reported:
+            self.error_reported = True
+            async_to_sync(self.listener.onDownloadError, self.error)
         self.continue_event.set()
 
     async def cancel_task(self):
         self.is_cancelled = True
         self.error = "Download Canceled by user"
-        await self.listener.onDownloadError(self.error)
+        if not self.error_reported:
+            self.error_reported = True
+            LOGGER.info(f"Cancelling Mega Download: {self.__name}")
+            await self.listener.onDownloadError(self.error)
+        self.continue_event.set()
 
 class AsyncExecutor:
     def __init__(self):
@@ -219,16 +227,20 @@ async def add_mega_download(mega_link, path, listener, name):
         await executor.continue_event.wait()
 
         # Handle results
-        if mega_listener.error:
+        if mega_listener.error and not mega_listener.error_reported:
+            mega_listener.error_reported = True
             await listener.onDownloadError(str(mega_listener.error))
-        elif mega_listener.is_cancelled:
+        elif mega_listener.is_cancelled and not mega_listener.error_reported:
+            mega_listener.error_reported = True
             await listener.onDownloadError("Download Canceled by user")
         else:
             await listener.onDownloadComplete()
 
     except Exception as e:
         LOGGER.error(f"Error in add_mega_download: {e}")
-        await listener.onDownloadError(str(e))
+        if not mega_listener.error_reported:
+            mega_listener.error_reported = True
+            await listener.onDownloadError(str(e))
     finally:
         # Cleanup
         try:
