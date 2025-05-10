@@ -222,9 +222,6 @@ class Mirror(TaskListener):
         if is_mega_link(self.link):
             self.isJd = False
             self.isQbit = False
-            LOGGER.info(f"Starting Mega download for {self.link}")
-            await add_mega_download(self.link, path, self, self.name)
-            return  # Mega download handles its own status updates
 
         if is_magnet(self.link):
             self.isJd = False
@@ -260,13 +257,15 @@ class Mirror(TaskListener):
                         await editMessage(f'{self.tag}, {e}', self.editable)
                         self.removeFromSameDir()
                         return
-        if not self.isJd:
+        if not self.isJd and not is_mega_link(self.link):
             await deleteMessage(self.editable)
 
         if file_:
             await TelegramDownloadHelper(self).add_download(reply_to, path)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
+        elif is_mega_link(self.link):
+            await add_mega_download(self.link, path, self, self.name)
         elif self.isJd:
             try:
                 await add_jd_download(self, f'{path}/')
