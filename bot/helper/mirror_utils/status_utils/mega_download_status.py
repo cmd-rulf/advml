@@ -1,9 +1,9 @@
 from time import time
-from bot import LOGGER
-from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot import LOGGER, MirrorStatus
+from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 
 class MegaDownloadStatus:
-    def __init__(self, name, size, gid, mega_listener, listener):
+    def __init__(self, name, size, gid, mega_listener, listener, download_path):
         self.__name = name
         self.__size = size
         self.__gid = gid
@@ -11,6 +11,8 @@ class MegaDownloadStatus:
         self.__listener = listener  # Store the full listener object
         self.message = listener.message  # Store the Pyrogram Message object
         self.__start_time = time()  # Record the start time of the download
+        self.__download_path = download_path  # Store the download path for upload
+        self.__is_uploading = False  # Track upload phase
 
     def name(self):
         return self.__name
@@ -22,7 +24,7 @@ class MegaDownloadStatus:
         return self.__gid
 
     def status(self):
-        return MirrorStatus.STATUS_DOWNLOADING
+        return MirrorStatus.STATUS_UPLOADING if self.__is_uploading else MirrorStatus.STATUS_DOWNLOADING
 
     def progress(self):
         try:
@@ -62,6 +64,13 @@ class MegaDownloadStatus:
     @property
     def listener(self):
         return self.__listener  # Provide access to the listener object as a property
+
+    @property
+    def download_path(self):
+        return self.__download_path  # Provide access to the download path
+
+    def set_upload_phase(self):
+        self.__is_uploading = True  # Switch to upload phase
 
     def task(self):
         return self
