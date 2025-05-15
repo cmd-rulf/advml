@@ -89,7 +89,7 @@ VID_MODE = {'vid_vid': 'Video + Video',
             'rmstream': 'Remove Stream'}
 
 DEFAULT_SPLIT_SIZE = 2097151000
-ARIA_NAME = environ.get('ARIA_NAME', 'wz2c')
+ARIA_NAME = environ.get('ARIA_NAME', 'aria2c')
 QBIT_NAME = environ.get('QBIT_NAME', 'qbittorrent-nox')
 FFMPEG_NAME = environ.get('FFMPEG_NAME', 'wzeg')
 
